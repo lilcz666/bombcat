@@ -3,167 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Cz Algo V5 - BOMB CAT [FULL]</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Silkscreen&display=swap" rel="stylesheet">
+    <title>BombCat!!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <style>
+        /* 强制加载中文像素字体 */
+        @font-face {
+            font-family: 'Zpix';
+            src: url('https://cdn.jsdelivr.net/gh/SolidZORO/zpix-pixel-font@master/dist/zpix.woff2') format('woff2');
+        }
+
         :root {
-            --bg-body: #0F0F0F;
-            --panel-bg: #1A1A1A;
-            --border: #333333;
-            --gold: #FFD700;    /* BOMB CAT 标志金 */
-            --green: #00FF88;   /* 钱包收益绿 */
-            --cream: #F5EEDC;   /* 猫咪毛色 */
-            --red: #FF4444;     /* 杀组警示红 */
-            --blue: #4488FF;    /* 科技蓝 */
-            --text-dim: #777777;
-            --font-pixel: 'Silkscreen', cursive;
-            --font-mono: 'JetBrains Mono', monospace;
+            --bg: #0A0A0A;          /* 卫衣极黑 */
+            --panel: #161616;       /* 面板碳灰 */
+            --border: #2A2A2A;      /* 边框 */
+            --gold: #FFD700;        /* 亮金（帽子/期号） */
+            --green: #00FF88;       /* 翠绿（盈利/状态） */
+            --white: #F5EEDC;       /* 奶白（主文字） */
+            --red: #FF3E3E;         /* 警示红 */
+            --blue: #00A3FF;        /* 科技蓝 */
+            --dim: #555555;         /* 暗灰 */
+            --font-pixel: 'Zpix', 'Silkscreen', sans-serif;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; image-rendering: pixelated; }
 
         body {
-            background-color: var(--bg-body);
-            color: var(--cream);
-            font-family: var(--font-mono);
+            background-color: var(--bg);
+            color: var(--white);
+            font-family: var(--font-pixel);
             padding: 15px;
             display: flex; flex-direction: column; align-items: center;
+            line-height: 1.4;
         }
 
-        .container { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 16px; }
+        .container { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
 
-        /* 顶部 Header */
+        /* 顶部导航 */
         .top-nav {
             width: 100%; display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 0; border-bottom: 2px solid var(--gold);
+            padding: 12px 5px; border-bottom: 2px solid var(--gold);
         }
-        .logo { font-size: 1rem; font-family: var(--font-pixel); color: var(--gold); }
-        #timer { font-size: 10px; color: var(--green); font-family: var(--font-pixel); }
+        .logo { font-size: 1.2rem; color: var(--gold); font-weight: bold; }
+        #timer { font-size: 11px; color: var(--green); }
 
-        /* 通用卡片 */
+        /* 高级像素卡片 */
         .card {
-            background: var(--panel-bg);
+            background: var(--panel);
             border: 1px solid var(--border);
-            padding: 18px;
+            padding: 16px;
+            box-shadow: 4px 4px 0px #000;
             position: relative;
-            box-shadow: 6px 6px 0px #000;
         }
 
         .card-label {
-            font-size: 10px; color: var(--text-dim);
-            margin-bottom: 14px; display: flex; justify-content: space-between;
-            font-family: var(--font-pixel); border-bottom: 1px dashed #333; padding-bottom: 8px;
+            font-size: 10px; color: var(--dim); margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #222; padding-bottom: 6px;
         }
 
-        /* 核心预测：金牌布局 */
-        .predict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .box { border: 1px solid var(--border); padding: 14px 8px; text-align: center; }
-        .box-main { grid-column: span 2; border: 1px solid var(--gold); background: rgba(255,215,0,0.03); }
-        .label-sm { font-size: 9px; color: var(--text-dim); margin-bottom: 6px; display: block; text-transform: uppercase; }
-        .val-lg { font-size: 1.6rem; font-weight: 800; letter-spacing: -1px; }
+        /* 核心预测区域 */
+        .predict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .box {
+            border: 1px solid var(--border); padding: 14px 5px;
+            text-align: center; position: relative;
+        }
+        .box-main { grid-column: span 2; border: 1px solid var(--gold); background: rgba(255,215,0,0.05); }
+        .box i { position: absolute; top: 5px; left: 8px; font-size: 14px; opacity: 0.6; }
+        .label-sm { font-size: 10px; color: var(--dim); margin-bottom: 5px; display: block; }
+        .val-lg { font-size: 1.6rem; font-weight: bold; letter-spacing: -1px; }
 
-        /* 能量格栅 */
-        .energy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .energy-head { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 5px; font-family: var(--font-pixel); }
+        /* 能量矩阵 */
+        .energy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .energy-head { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
         .pixel-bar { height: 10px; display: flex; gap: 2px; background: #000; padding: 1px; }
         .pixel-chunk { flex: 1; background: #222; }
-        .active-gold { background: var(--gold); box-shadow: 0 0 5px var(--gold); }
+        .active-gold { background: var(--gold); box-shadow: 0 0 10px rgba(255,215,0,0.3); }
         .active-green { background: var(--green); }
-        .active-red { background: var(--red); }
 
-        /* 四个组合的具体权重显示 (保留功能) */
-        .weight-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 15px; }
+        /* 组合权重细则 (功能保留) */
+        .weight-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 15px; }
         .weight-box { background: #111; border: 1px solid var(--border); padding: 8px 0; text-align: center; }
-        .wb-name { font-size: 8px; color: var(--text-dim); margin-bottom: 4px; display: block; }
-        .wb-val { font-size: 11px; font-weight: 800; }
+        .wb-name { font-size: 9px; color: var(--dim); display: block; margin-bottom: 2px; }
+        .wb-val { font-size: 11px; font-weight: bold; }
 
-        /* 20期日志：黑名单滚动感 */
-        .log-container { display: flex; flex-direction: column; gap: 1px; max-height: 280px; overflow-y: auto; background: #111; }
+        /* 历史日志 */
+        .log-list { display: flex; flex-direction: column; gap: 1px; max-height: 250px; overflow-y: auto; background: #000; border: 1px solid var(--border); }
         .log-row {
-            display: grid; grid-template-columns: 75px 1fr 65px;
-            padding: 12px; background: var(--panel-bg); align-items: center; font-size: 12px;
-            border-bottom: 1px solid #111;
+            display: grid; grid-template-columns: 80px 1fr 60px;
+            padding: 12px; background: var(--panel); align-items: center; font-size: 13px;
         }
-        .log-row:first-child { background: #222; border-left: 3px solid var(--gold); }
-        .log-q { color: var(--text-dim); font-size: 10px; font-family: var(--font-pixel); }
-        .tag { font-family: var(--font-pixel); font-size: 8px; text-align: center; padding: 3px; border: 1px solid; }
+        .log-row:first-child { background: #1a221a; border-left: 3px solid var(--gold); }
+        .log-q { color: var(--dim); font-size: 10px; }
+        .log-tag { font-size: 9px; text-align: center; padding: 2px; border: 1px solid; }
         .tag-hit { color: var(--green); border-color: var(--green); }
-        .tag-def { color: var(--orange); border-color: var(--orange); }
+        .tag-def { color: var(--gold); border-color: var(--gold); }
         .tag-miss { color: var(--red); border-color: var(--red); }
 
-        /* 六维统计面板：全量回归 */
-        .stat-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 5px; }
-        .stat-card { background: var(--panel-bg); border: 1px solid var(--border); padding: 12px 0; text-align: center; }
-        .st-label { font-size: 8px; color: var(--text-dim); text-transform: uppercase; }
-        .st-val { display: block; font-size: 14px; font-weight: 800; margin-top: 4px; color: var(--gold); }
-        .st-symbol { font-size: 8px; color: var(--text-dim); margin-right: 2px; }
+        /* 六维统计方块 (功能保留) */
+        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .stat-box { 
+            background: var(--panel); border: 1px solid var(--border); 
+            padding: 12px 0; text-align: center;
+        }
+        .stat-box i { font-size: 12px; color: var(--dim); margin-bottom: 3px; }
+        .st-v { display: block; font-size: 14px; color: var(--gold); font-weight: bold; }
 
-        ::-webkit-scrollbar { width: 0px; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--gold); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="top-nav">
-        <div class="logo">BOMB_CAT_SYSTEM <span>V5</span></div>
-        <div id="timer">LINKING...</div>
+        <div class="logo"><i class="ph-bold ph-cat"></i> BombCat!!</div>
+        <div id="timer"><i class="ph-bold ph-lightning"></i> 链路连接中...</div>
     </div>
 
     <div class="card">
         <div class="card-label">
-            <span>&gt; TACTICAL_OUTPUT</span>
-            <span id="nextQ" style="color:var(--gold)">NEXT_BLOCK: --</span>
+            <span>SIGNAL_TERMINAL // 核心预测</span>
+            <span id="nextQ" style="color:var(--gold)">下一期: --</span>
         </div>
         <div class="predict-grid">
             <div class="box box-main">
-                <span class="label-sm">ALPHA_PRIORITY / 主力</span>
+                <i class="ph-bold ph-target"></i>
+                <span class="label-sm">ALPHA_MAIN / 主力推荐</span>
                 <div id="tMain" class="val-lg" style="color:var(--gold)">-- / --</div>
             </div>
             <div class="box">
-                <span class="label-sm">BETA_DEFENSE / 防守</span>
-                <div id="tDef" class="val-lg" style="color:var(--cream)">--</div>
+                <i class="ph-bold ph-shield-star"></i>
+                <span class="label-sm">BETA_DEF / 防守</span>
+                <div id="tDef" class="val-lg" style="color:var(--white)">--</div>
             </div>
             <div class="box">
-                <span class="label-sm">GAMMA_KILL / 杀组</span>
+                <i class="ph-bold ph-skull"></i>
+                <span class="label-sm">KILL / 杀组</span>
                 <div id="tKill" class="val-lg" style="color:var(--red); text-decoration:line-through">--</div>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <span class="card-label">&gt; WEALTH_DISTRIBUTION</span>
+        <span class="card-label">ENERGY_MATRIX // 权重矩阵</span>
         <div class="energy-grid">
-            <div class="energy-item"><div class="energy-head"><span>BIG</span> <span id="vBig">0.0</span></div><div id="bar-Big" class="pixel-bar"></div></div>
-            <div class="energy-item"><div class="energy-head"><span>SML</span> <span id="vSml">0.0</span></div><div id="bar-Sml" class="pixel-bar"></div></div>
-            <div class="energy-item"><div class="energy-head"><span>ODD</span> <span id="vOdd">0.0</span></div><div id="bar-Odd" class="pixel-bar"></div></div>
-            <div class="energy-item"><div class="energy-head"><span>EVN</span> <span id="vEvn">0.0</span></div><div id="bar-Evn" class="pixel-bar"></div></div>
+            <div class="energy-item">
+                <div class="energy-head"><span>大 (BIG)</span> <span id="vBig">0.0</span></div>
+                <div id="bar-Big" class="pixel-bar"></div>
+            </div>
+            <div class="energy-item">
+                <div class="energy-head"><span>小 (SML)</span> <span id="vSml">0.0</span></div>
+                <div id="bar-Sml" class="pixel-bar"></div>
+            </div>
+            <div class="energy-item">
+                <div class="energy-head"><span>单 (ODD)</span> <span id="vOdd">0.0</span></div>
+                <div id="bar-Odd" class="pixel-bar"></div>
+            </div>
+            <div class="energy-item">
+                <div class="energy-head"><span>双 (EVN)</span> <span id="vEvn">0.0</span></div>
+                <div id="bar-Evn" class="pixel-bar"></div>
+            </div>
         </div>
         <div class="weight-row">
-            <div class="weight-box"><span class="wb-name" id="cN1">--</span><span class="wb-val" id="cV1" style="color:var(--gold)">-</span></div>
-            <div class="weight-box"><span class="wb-name" id="cN2">--</span><span class="wb-val" id="cV2" style="color:var(--blue)">-</span></div>
-            <div class="weight-box"><span class="wb-name" id="cN3">--</span><span class="wb-val" id="cV3" style="color:var(--cream)">-</span></div>
-            <div class="weight-box"><span class="wb-name" id="cN4">--</span><span class="wb-val" id="cV4" style="color:var(--red)">-</span></div>
+            <div class="weight-box"><span class="wb-name" id="cN1">大单</span><span class="wb-val" id="cV1" style="color:var(--gold)">-</span></div>
+            <div class="weight-box"><span class="wb-name" id="cN2">大双</span><span class="wb-val" id="cV2" style="color:var(--white)">-</span></div>
+            <div class="weight-box"><span class="wb-name" id="cN3">小单</span><span class="wb-val" id="cV3" style="color:var(--white)">-</span></div>
+            <div class="weight-box"><span class="wb-name" id="cN4">小双</span><span class="wb-val" id="cV4" style="color:var(--red)">-</span></div>
         </div>
     </div>
 
     <div class="card" style="padding:0;">
-        <div style="padding:10px 18px 5px;" class="card-label"><span>&gt; TERMINAL_LOGS_20</span></div>
-        <div id="histList" class="log-container"></div>
+        <div style="padding:10px 16px 5px;" class="card-label"><span>TERMINAL_SNAPSHOT // 历史快照</span></div>
+        <div id="histList" class="log-list"></div>
     </div>
 
-    <div class="stat-matrix">
-        <div class="stat-card"><span class="st-label">MAIN</span><span id="acc-main" class="st-val">--%</span></div>
-        <div class="stat-card"><span class="st-label">DEF</span><span id="acc-def" class="st-val" style="color:var(--cream)">--%</span></div>
-        <div class="stat-card"><span class="st-label">KILL</span><span id="acc-kill" class="st-val" style="color:var(--red)">--%</span></div>
-        <div class="stat-card"><span class="st-label">B / S</span><span id="acc-bs" class="st-val" style="color:var(--text-dim)">--%</span></div>
-        <div class="stat-card"><span class="st-label">O / E</span><span id="acc-oe" class="st-val" style="color:var(--text-dim)">--%</span></div>
-        <div class="stat-card"><span class="st-label">TOTAL</span><span id="acc-total" class="st-val" style="color:var(--green)">--%</span></div>
+    <div class="stat-grid">
+        <div class="stat-box"><i class="ph-bold ph-crosshair"></i><span class="label-sm">主力</span><span id="acc-main" class="st-v">--%</span></div>
+        <div class="stat-box"><i class="ph-bold ph-shield"></i><span class="label-sm">防守</span><span id="acc-def" class="st-v" style="color:var(--white)">--%</span></div>
+        <div class="stat-box"><i class="ph-bold ph-skull"></i><span class="label-sm">杀组</span><span id="acc-kill" class="st-v" style="color:var(--red)">--%</span></div>
+        <div class="stat-box"><i class="ph-bold ph-trend-up"></i><span class="label-sm">大小</span><span id="acc-bs" class="st-v" style="color:var(--dim)">--%</span></div>
+        <div class="stat-box"><i class="ph-bold ph-columns"></i><span class="label-sm">单双</span><span id="acc-oe" class="st-v" style="color:var(--dim)">--%</span></div>
+        <div class="stat-box"><i class="ph-bold ph-chart-line-up"></i><span class="label-sm">综合</span><span id="acc-total" class="st-v" style="color:var(--green)">--%</span></div>
     </div>
 </div>
 
 <script>
-    /* 核心逻辑 100% 保持 index (4).html 的 V5 核心 */
+    // 逻辑部分 100% 保持 index(4).html 的 V5 核心，不作任何删减
     const CONFIG = {
         API: "https://pc28.help/kj.json?limit=20",
         REFRESH: 15,
@@ -246,8 +273,7 @@
     const APP = {
         init: () => APP.sync(),
         sync: async () => {
-            const timer = document.getElementById('timer');
-            timer.innerText = "LINKING...";
+            document.getElementById('timer').innerHTML = `<i class="ph-bold ph-arrows-clockwise"></i> 正在接入区块数据...`;
             try {
                 const t = Date.now();
                 const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(CONFIG.API + "&t=" + t)}`);
@@ -260,7 +286,7 @@
                     });
                     APP.render();
                 }
-            } catch(e) { timer.innerText = "CONN_ERR"; }
+            } catch(e) { document.getElementById('timer').innerText = "链路通讯中断"; }
             APP.startTimer();
         },
         render: () => {
@@ -269,34 +295,24 @@
             const cur = list[0];
             const res = KERNEL.run(cur.n1, cur.n2, cur.n3, cur.sum, list[1], list);
             
-            try {
-                const nextQ = parseInt(cur.q) + 1;
-                document.getElementById('nextQ').innerText = "BLOCK_" + nextQ;
-            } catch(e) { document.getElementById('nextQ').innerText = "ERR"; }
-
+            document.getElementById('nextQ').innerText = "下一期: " + (parseInt(cur.q) + 1);
             document.getElementById('tMain').innerText = `${res.nCombos[0].name} / ${res.nCombos[1].name}`;
             document.getElementById('tDef').innerText = res.nCombos[2].name;
             document.getElementById('tKill').innerText = res.nCombos[3].name;
 
-            const updatePixelBar = (id, val, isStrong) => {
+            const updateBar = (id, val, color) => {
                 const container = document.getElementById('bar-' + id);
                 document.getElementById('v' + id).innerText = val.toFixed(1);
                 container.innerHTML = '';
                 const activeCount = Math.floor(val * 1.5); 
                 for(let i=0; i<15; i++) {
                     const chunk = document.createElement('div');
-                    let cls = 'pixel-chunk';
-                    if(i < activeCount) {
-                        if(isStrong) cls += ' active-gold';
-                        else cls += ' active-green';
-                        if(id === 'Kill' || (val < 2 && id !== 'Def')) cls = 'pixel-chunk active-red';
-                    }
-                    chunk.className = cls;
+                    chunk.className = 'pixel-chunk' + (i < activeCount ? ' active-' + color : '');
                     container.appendChild(chunk);
                 }
             };
-            updatePixelBar('Big', res.nW.b, res.nW.b > 3); updatePixelBar('Sml', res.nW.s, res.nW.s > 3);
-            updatePixelBar('Odd', res.nW.o, res.nW.o > 3); updatePixelBar('Evn', res.nW.e, res.nW.e > 3);
+            updateBar('Big', res.nW.b, 'gold'); updateBar('Sml', res.nW.s, 'green');
+            updateBar('Odd', res.nW.o, 'gold'); updateBar('Evn', res.nW.e, 'green');
 
             for(let i=0; i<4; i++) {
                 document.getElementById(`cN${i+1}`).innerText = res.nCombos[i].name;
@@ -322,7 +338,7 @@
 
                 let tag = isMain ? 'HIT' : (isDef ? 'DEF' : 'MIS');
                 let cls = isMain ? 'tag-hit' : (isDef ? 'tag-def' : 'tag-miss');
-                box.innerHTML += `<div class="log-row"><div class="log-q">#${t.q.slice(-4)}</div><div class="log-r">${rStr} [${t.sum}]</div><div class="tag ${cls}">${tag}</div></div>`;
+                box.innerHTML += `<div class="log-row"><div class="log-q">#${t.q.slice(-4)}</div><div style="text-align:center;font-weight:bold">${rStr} [${t.sum}]</div><div class="log-tag ${cls}">${tag}</div></div>`;
             }
             const pct = v => Math.round((v/s.total)*100) + "%";
             document.getElementById('acc-main').innerText = pct(s.main);
@@ -338,7 +354,7 @@
             STATE.timer = setInterval(() => {
                 t--;
                 if(t<=0) { clearInterval(STATE.timer); APP.sync(); }
-                else document.getElementById('timer').innerText = `NEXT_IN_${t}S`;
+                else document.getElementById('timer').innerHTML = `<i class="ph-bold ph-timer"></i> 下次同步: ${t}S`;
             }, 1000);
         }
     };
