@@ -2,1122 +2,396 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cz算法 V1</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Cz算法 V5 [PIXEL]</title>
+    <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+    
     <style>
-        /* ==========================================================================
-           MODULE 1: V1 ORIGINAL VISUAL SYSTEM (UNTOUCHED)
-           保留原始商业级 CSS 架构，无任何压缩
-           ========================================================================== */
         :root {
-            --color-bg-light: #f2f2f7;
-            --color-card-white: #ffffff;
-            --color-text-main: #000000;
-            --color-text-sub: #8e8e93;
-            --color-accent-blue: #007aff;
-            --color-accent-red: #ff3b30;
-            --color-accent-green: #34c759;
-            --shadow-level-1: 0 2px 8px rgba(0, 0, 0, 0.04);
-            --shadow-level-2: 0 8px 24px rgba(0, 0, 0, 0.12);
-            --radius-standard: 16px;
+            /* 像素风配色：更高对比度 */
+            --bg-deep: #000000;
+            --card-bg: #111111;
+            --card-border: #333333;
+            --primary: #00ff00; /* 经典黑客绿 */
+            --accent: #ffff00; /* 亮黄 */
+            --danger: #ff0044; /* 像素红 */
+            --success: #00ff00; 
+            --purple: #ff00ff; /* 霓虹紫 */
+            --cyan: #00ffff;
+            --text-main: #ffffff;
+            --text-sub: #888888;
+            --font-pixel: 'Silkscreen', cursive, 'Roboto Mono', monospace;
         }
 
-        /* 模式定义：暗影模式 */
-        body.mode-shadow {
-            --color-bg-light: #000000;
-            --color-card-white: #1c1c1e;
-            --color-text-main: #ffffff;
-            --color-text-sub: #98989d;
-            --color-accent-blue: #0a84ff;
-            --color-accent-red: #ff453a;
-            --color-accent-green: #30d158;
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            margin: 0; padding: 0; 
+            /* 强制像素渲染质感 */
+            image-rendering: pixelated;
         }
 
-        /* 模式定义：混沌模式 */
-        body.mode-chaos {
-            --color-bg-light: #1a202c;
-            --color-card-white: #2d3748;
-            --color-text-main: #f7fafc;
-            --color-text-sub: #cbd5e0;
-            --color-accent-blue: #38b2ac;
-        }
-
-        /* 模式定义：ICU 风控模式 */
-        body.mode-icu {
-            --color-bg-light: #2d0a0a;
-            --color-card-white: #450a0a;
-            --color-text-main: #ffb3b3;
-            --color-accent-blue: #ff3b30;
-        }
-
-        /* 全局基础样式 */
         body {
-            background-color: var(--color-bg-light);
-            color: var(--color-text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            padding-bottom: 120px;
-            transition: background-color 0.4s ease, color 0.4s ease;
-            -webkit-tap-highlight-color: transparent;
+            background-color: var(--bg-deep);
+            background-image: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%; /* 复古扫描线效果 */
+            color: var(--text-main); 
+            font-family: var(--font-pixel);
+            min-height: 100vh; 
+            display: flex; flex-direction: column; align-items: center; 
+            padding: 20px 16px;
         }
 
-        .app-wrapper {
-            max-width: 480px;
-            margin: 0 auto;
-            display: none; /* 登录前隐藏 */
-        }
+        .container { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 20px; }
 
-        /* 顶部导航栏 */
-        .top-navigation {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
+        /* 顶部 Header */
+        .header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            border: 4px solid var(--text-main);
+            padding: 8px 12px;
+            background: var(--card-bg);
+            box-shadow: 4px 4px 0px var(--primary);
         }
+        .brand { font-size: 1.2rem; font-weight: 700; text-transform: uppercase; }
+        .brand span { color: var(--primary); }
 
-        .brand-logo {
-            font-size: 24px;
-            font-weight: 900;
-            letter-spacing: -0.5px;
+        .status-badge { 
+            font-size: 0.7rem; color: var(--primary); 
+            display: flex; align-items: center; gap: 8px;
         }
+        .pulse-dot { width: 8px; height: 8px; background: var(--primary); animation: blink 1s steps(2, start) infinite; }
+        @keyframes blink { to { visibility: hidden; } }
 
-        .tier-badge {
-            display: inline-block;
-            font-size: 10px;
-            font-weight: 800;
-            padding: 4px 8px;
-            background-color: rgba(0, 122, 255, 0.1);
-            color: var(--color-accent-blue);
-            border-radius: 6px;
-            margin-left: 8px;
-            vertical-align: middle;
+        /* 像素风卡片 */
+        .card { 
+            background: var(--card-bg); 
+            border: 4px solid var(--card-border);
+            padding: 16px; 
+            position: relative;
+            box-shadow: 6px 6px 0px #000;
+        }
+        .card-label { 
+            font-size: 0.7rem; color: var(--accent); 
+            margin-bottom: 12px; 
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px dashed var(--card-border);
+            padding-bottom: 6px;
             text-transform: uppercase;
         }
+        .next-q { color: var(--primary); text-shadow: 2px 2px 0px #000; }
 
-        .control-group {
-            display: flex;
-            gap: 10px;
+        /* 核心战术板 */
+        .tac-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .tac-box { 
+            border: 2px solid var(--card-border); 
+            padding: 12px 4px; 
+            display: flex; flex-direction: column; align-items: center; 
         }
+        .tac-box.main { 
+            grid-column: span 2; 
+            border-color: var(--primary);
+            background: rgba(0, 255, 0, 0.05);
+        }
+        .tac-box.kill { border-color: var(--danger); }
+        .tac-title { font-size: 0.6rem; color: var(--text-sub); margin-bottom: 8px; }
+        .tac-val { font-size: 1.5rem; font-weight: 700; text-shadow: 3px 3px 0px #000; }
+        .c-main { color: var(--primary); }
+        .c-def { color: var(--accent); }
+        .c-kill { color: var(--danger); text-decoration: line-through; }
 
-        .icon-button {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            background-color: var(--color-card-white);
-            border: none;
-            box-shadow: var(--shadow-level-1);
-            font-size: 18px;
-            display: none; /* 默认隐藏 */
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
+        /* 能量矩阵 */
+        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
+        .hud-item { display: flex; flex-direction: column; gap: 8px; }
+        .hud-head { display: flex; justify-content: space-between; font-size: 0.7rem; }
+        .hud-track { height: 12px; background: #222; border: 2px solid #444; position: relative; }
+        .hud-bar { height: 100%; transition: width 0.3s steps(10); }
 
-        .icon-button:active {
-            transform: scale(0.9);
-        }
+        .combo-row { display: flex; justify-content: space-between; margin-top: 20px; border-top: 2px solid var(--card-border); padding-top: 12px; }
+        .mini-stat { text-align: center; flex: 1; }
+        .ms-label { font-size: 0.55rem; color: var(--text-sub); margin-bottom: 4px; display: block; }
+        .ms-val { font-size: 0.9rem; color: #fff; }
 
-        /* 神经元矩阵系统 */
-        .matrix-container {
-            display: none; /* 默认隐藏 */
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            margin-bottom: 20px;
+        /* 历史日志 */
+        #histList { 
+            display: flex; flex-direction: column; gap: 4px; 
+            max-height: 300px; overflow-y: scroll; 
         }
+        .log-row { 
+            display: grid; grid-template-columns: 70px 1fr 60px; 
+            padding: 8px; font-size: 0.75rem; 
+            background: #1a1a1a; border: 1px solid #333;
+        }
+        .log-row:first-child { border-color: var(--primary); background: #002200; }
+        .log-q { color: var(--text-sub); }
+        .log-r { text-align: center; color: #fff; }
+        .tag-hit { color: var(--primary); }
+        .tag-def { color: var(--accent); }
+        .tag-miss { color: var(--danger); }
 
-        .neuron-cell {
-            background-color: var(--color-card-white);
-            height: 55px;
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--color-text-sub);
-            box-shadow: var(--shadow-level-1);
-            transition: all 0.3s ease;
-            border: 1px solid transparent;
-        }
+        /* 底部统计统计 */
+        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .stat-box { border: 2px solid var(--card-border); padding: 8px 0; text-align: center; background: #000; }
+        .stat-t { font-size: 0.5rem; color: var(--text-sub); margin-bottom: 4px; }
+        .stat-v { font-size: 0.9rem; color: #fff; }
 
-        .neuron-cell.active-neuron {
-            background-color: var(--color-accent-blue);
-            color: #ffffff;
-            transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(0, 122, 255, 0.3);
-            animation: pulse-animation 2s infinite;
-        }
-
-        /* 历史记录条 (圆形风格) */
-        .history-strip-container {
-            display: none;
-            overflow-x: auto;
-            padding: 10px 5px;
-            margin-bottom: 15px;
-            scrollbar-width: none; /* Firefox */
-        }
-        
-        .history-strip-container::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
-        }
-
-        .history-ball {
-            flex: 0 0 auto;
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            background-color: var(--color-card-white);
-            border: 2px solid var(--color-accent-blue);
-            color: var(--color-text-main);
-            font-weight: 800;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 12px;
-            box-shadow: var(--shadow-level-1);
-            /* V28 新增：入场动画 */
-            animation: slide-in-right 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
-        }
-
-        /* 主输入卡片 */
-        .input-card {
-            background-color: var(--color-card-white);
-            border-radius: var(--radius-standard);
-            padding: 24px;
-            box-shadow: var(--shadow-level-2);
-            margin-bottom: 20px;
-            /* V28 新增：弹性入场 */
-            animation: float-up 0.6s ease-out;
-        }
-
-        .grid-inputs {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-        }
-
-        .big-input {
-            width: 100%;
-            height: 70px;
-            background-color: var(--color-bg-light);
-            border: none;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--color-text-main);
-            outline: none;
-            box-sizing: border-box;
-            transition: background 0.3s;
-        }
-
-        .big-input:focus {
-            background-color: rgba(0, 122, 255, 0.05);
-            border: 1px solid var(--color-accent-blue);
-        }
-
-        .money-input-wrapper {
-            display: none; /* 默认隐藏 */
-            margin-top: 20px;
-            padding: 12px 16px;
-            background-color: var(--color-bg-light);
-            border-radius: 12px;
-            align-items: center;
-        }
-
-        .currency-symbol {
-            font-weight: 900;
-            color: var(--color-accent-green);
-            font-size: 20px;
-            margin-right: 10px;
-        }
-
-        .execute-button {
-            width: 100%;
-            height: 60px;
-            margin-top: 20px;
-            background-color: var(--color-text-main);
-            color: var(--color-bg-light);
-            border: none;
-            border-radius: 14px;
-            font-size: 17px;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.1s;
-        }
-
-        .execute-button:active {
-            transform: scale(0.98);
-        }
-
-        /* 结果显示区域 */
-        .results-panel {
-            display: none;
-            /* V28 新增：淡入 */
-            animation: fade-in 0.5s ease-out;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .stat-box {
-            background-color: var(--color-card-white);
-            padding: 16px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: var(--shadow-level-1);
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: var(--color-text-sub);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 900;
-            color: var(--color-accent-blue);
-        }
-
-        /* 四象限方块 */
-        .quadrant-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 25px;
-        }
-
-        .quad-cell {
-            background-color: var(--color-card-white);
-            padding: 20px;
-            border-radius: 14px;
-            text-align: center;
-            position: relative;
-            box-shadow: var(--shadow-level-1);
-            border: 2px solid transparent;
-            transition: all 0.3s;
-        }
-
-        .quad-cell.status-hot {
-            background-color: rgba(52, 199, 89, 0.08);
-            border-color: var(--color-accent-green);
-        }
-
-        .quad-cell.status-kill {
-            opacity: 0.4;
-            filter: grayscale(100%);
-        }
-
-        .hot-tag {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background-color: var(--color-accent-green);
-            color: white;
-            font-size: 10px;
-            padding: 4px 8px;
-            border-radius: 8px;
-            font-weight: 800;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            display: none;
-            /* V28 新增：弹出动画 */
-            animation: pop-in 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-        }
-
-        /* 策略方案列表 */
-        .strategy-container {
-            margin-top: 20px;
-        }
-
-        .plan-card {
-            background-color: var(--color-card-white);
-            padding: 20px;
-            border-radius: 14px;
-            margin-bottom: 12px;
-            box-shadow: var(--shadow-level-1);
-            border-left: 5px solid var(--color-text-sub);
-            /* V28 新增：顺序滑入 */
-            animation: slide-up-fade 0.5s ease forwards;
-            opacity: 0;
-        }
-
-        .plan-card.type-S {
-            border-left-color: var(--color-accent-red);
-            background: linear-gradient(to right, rgba(255, 59, 48, 0.05), var(--color-card-white));
-        }
-
-        .plan-card.type-A {
-            border-left-color: var(--color-accent-green);
-        }
-
-        .plan-card.type-C {
-            border-left-color: var(--color-accent-blue);
-        }
-
-        .plan-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .plan-title {
-            font-weight: 800;
-            font-size: 15px;
-        }
-
-        .plan-profit {
-            color: var(--color-accent-green);
-            font-weight: 800;
-            font-size: 13px;
-        }
-
-        .plan-desc {
-            font-size: 12px;
-            color: var(--color-text-sub);
-            line-height: 1.4;
-        }
-
-        .logout-btn {
-            text-align: center;
-            margin-top: 40px;
-            font-size: 12px;
-            color: var(--color-text-sub);
-            text-decoration: underline;
-            cursor: pointer;
-        }
-
-        /* ==========================================================================
-           MODULE 2: V26 CLOUD AUTH UI (新增)
-           ========================================================================== */
-        #auth-overlay-system {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000000;
-            z-index: 99999;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .auth-container {
-            width: 85%;
-            max-width: 340px;
-            background-color: #1c1c1e;
-            padding: 35px 25px;
-            border-radius: 24px;
-            text-align: center;
-            border: 1px solid #333;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        .auth-title {
-            color: #ffffff;
-            font-size: 22px;
-            font-weight: 900;
-            margin-bottom: 8px;
-        }
-
-        .auth-subtitle {
-            color: #888888;
-            font-size: 12px;
-            margin-bottom: 30px;
-            letter-spacing: 1px;
-        }
-
-        .auth-input {
-            width: 100%;
-            padding: 18px;
-            margin-bottom: 20px;
-            border-radius: 12px;
-            border: 1px solid #444;
-            background-color: #2c2c2e;
-            color: #ffffff;
-            font-size: 16px;
-            text-align: center;
-            outline: none;
-            box-sizing: border-box;
-        }
-
-        .auth-btn {
-            width: 100%;
-            padding: 18px;
-            border-radius: 12px;
-            border: none;
-            background-color: #007aff;
-            color: #ffffff;
-            font-weight: 800;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .auth-btn:hover {
-            background-color: #0063cc;
-        }
-
-        .auth-message {
-            margin-top: 20px;
-            color: #ff3b30;
-            font-size: 12px;
-            min-height: 16px;
-        }
-
-        /* ==========================================================================
-           MODULE 3: ANIMATION LIBRARY (新增)
-           ========================================================================== */
-        @keyframes slide-in-right {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes float-up {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes pop-in {
-            0% { transform: scale(0); opacity: 0; }
-            80% { transform: scale(1.1); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        @keyframes pulse-animation {
-            0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(0, 122, 255, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); }
-        }
-
-        @keyframes slide-up-fade {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        /* 隐藏滚动条但保留功能 */
+        #histList::-webkit-scrollbar { width: 6px; }
+        #histList::-webkit-scrollbar-thumb { background: var(--card-border); }
     </style>
-    <script>
-    // --- 🚫 源代码保护盾 (直接复制粘贴这段) ---
-    
-    // 1. 禁止右键和选择
-    document.oncontextmenu = function() { return false; };
-    document.onselectstart = function() { return false; };
-    
-    // 2. 禁止 F12 和开发者工具快捷键
-    document.onkeydown = function(e) {
-        if (e.keyCode === 123 || 
-           (e.ctrlKey && e.shiftKey && e.keyCode === 73) || 
-           (e.ctrlKey && e.keyCode === 85)) {
-            return false;
-        }
-    };
-
-    // 3. 调试卡死陷阱 (一旦打开控制台，浏览器就卡死)
-    setInterval(function() {
-        var startTime = performance.now();
-        debugger; // 断点陷阱
-        if (performance.now() - startTime > 100) {
-            document.body.innerHTML = '<div style="background:black;color:red;width:100%;height:100vh;padding:50px;text-align:center;"><h1>⚠️ 非法调试拦截</h1></div>';
-            window.location.reload();
-        }
-    }, 1000);
-    </script>
 </head>
 <body>
 
-<div id="auth-overlay-system">
-    <div class="auth-container">
-        <div class="auth-title">Cz算法 V1</div>
-        <div class="auth-subtitle">SECURE CLOUD ACCESS</div>
-        <input type="text" id="input-key" class="auth-input" placeholder="请输入您的授权卡密">
-        <button class="auth-btn" id="btn-login" onclick="processCloudLogin()">验证并连接服务器</button>
-        <div class="auth-message" id="login-feedback"></div>
-    </div>
-</div>
-
-<div class="app-wrapper" id="app-interface">
-    
-    <div class="top-navigation">
-        <div class="brand-logo">
-            CZ ORACLE <span class="tier-badge" id="badge-tier">LITE</span>
-        </div>
-        <div class="control-group">
-            <button class="icon-button" id="ctrl-mode" onclick="cycleAppMode()">☀</button>
-            <button class="icon-button" id="ctrl-icu" onclick="toggleICUState()">🚑</button>
-        </div>
+<div class="container">
+    <div class="header">
+        <div class="brand">CZ_SYSTEM <span>V5</span></div>
+        <div class="status-badge"><div class="pulse-dot"></div> <span id="timer">LINKING</span></div>
     </div>
 
-    <div class="matrix-container" id="neuro-grid">
-        <div class="neuron-cell" id="n-inertia">
-            <span>INER</span>
-            <span>惯性</span>
+    <div class="card">
+        <div class="card-label">
+            <span>&gt; CORE_SIGNAL</span>
+            <span id="nextQ" class="next-q">TARGET: --</span>
         </div>
-        <div class="neuron-cell" id="n-pattern">
-            <span>PATT</span>
-            <span>形态</span>
-        </div>
-        <div class="neuron-cell" id="n-entropy">
-            <span>ENTR</span>
-            <span>熵值</span>
-        </div>
-        <div class="neuron-cell" id="n-regress">
-            <span>REG</span>
-            <span>回归</span>
-        </div>
-        <div class="neuron-cell" id="n-kill">
-            <span>KILL</span>
-            <span>杀组</span>
-        </div>
-    </div>
-
-    <div class="history-strip-container" id="history-view"></div>
-
-    <div class="input-card">
-        <div id="phase-init">
-            <div class="grid-inputs">
-                <input type="tel" id="in-n3" class="big-input" placeholder="N3">
-                <input type="tel" id="in-n2" class="big-input" placeholder="N2">
-                <input type="tel" id="in-n1" class="big-input" placeholder="N1">
+        
+        <div class="tac-grid">
+            <div class="tac-box main">
+                <span class="tac-title">PRIORITY_ALPHA</span>
+                <div id="tMain" class="tac-val c-main">-- / --</div>
+            </div>
+            <div class="tac-box">
+                <span class="tac-title">DEFENSE_BETA</span>
+                <div id="tDef" class="tac-val c-def">--</div>
+            </div>
+            <div class="tac-box kill">
+                <span class="tac-title">ERASE_GAMMA</span>
+                <div id="tKill" class="tac-val c-kill">--</div>
             </div>
         </div>
-
-        <div id="phase-run" style="display:none;">
-            <input type="tel" id="in-new" class="big-input" style="width:100%;" placeholder="输入最新一期号码">
-        </div>
-
-        <div class="money-input-wrapper" id="box-money">
-            <span class="currency-symbol">¥</span>
-            <input type="tel" id="in-money" value="1000" style="background:transparent; border:none; font-size:22px; font-weight:900; width:100%; outline:none; color:var(--color-text-main);">
-        </div>
-
-        <button class="execute-button" id="btn-exec" onclick="triggerOracle()">执行神谕演算 / EXECUTE</button>
     </div>
 
-    <div class="results-panel" id="panel-res">
-        <div class="input-card">
-            <div class="dashboard-grid">
-                <div class="stat-box">
-                    <div class="stat-label">重心倾向</div>
-                    <div class="stat-value" id="val-core">--</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">演算信度</div>
-                    <div class="stat-value" id="val-conf">0%</div>
-                </div>
+    <div class="card">
+        <span class="card-label">&gt; ENERGY_MATRIX</span>
+        <div class="hud-grid">
+            <div class="hud-item">
+                <div class="hud-head"><span>BIG</span> <span id="vBig">0.0</span></div>
+                <div class="hud-track"><div id="bBig" class="hud-bar" style="width:0%; background:var(--danger)"></div></div>
             </div>
-
-            <div class="quadrant-grid">
-                <div class="quad-cell" id="cell-be">
-                    <div class="hot-tag" id="tag-be">HOT</div>
-                    <div>大双</div>
-                    <div class="stat-value" id="p-be">0%</div>
-                </div>
-                <div class="quad-cell" id="cell-bo">
-                    <div class="hot-tag" id="tag-bo">HOT</div>
-                    <div>大单</div>
-                    <div class="stat-value" id="p-bo">0%</div>
-                </div>
-                <div class="quad-cell" id="cell-se">
-                    <div class="hot-tag" id="tag-se">HOT</div>
-                    <div>小双</div>
-                    <div class="stat-value" id="p-se">0%</div>
-                </div>
-                <div class="quad-cell" id="cell-so">
-                    <div class="hot-tag" id="tag-so">HOT</div>
-                    <div>小单</div>
-                    <div class="stat-value" id="p-so">0%</div>
-                </div>
+            <div class="hud-item">
+                <div class="hud-head"><span>SML</span> <span id="vSml">0.0</span></div>
+                <div class="hud-track"><div id="bSml" class="hud-bar" style="width:0%; background:var(--success)"></div></div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-head"><span>ODD</span> <span id="vOdd">0.0</span></div>
+                <div class="hud-track"><div id="bOdd" class="hud-bar" style="width:0%; background:var(--purple)"></div></div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-head"><span>EVN</span> <span id="vEvn">0.0</span></div>
+                <div class="hud-track"><div id="bEvn" class="hud-bar" style="width:0%; background:var(--cyan)"></div></div>
             </div>
         </div>
-
-        <div class="strategy-container" id="list-plans">
-            </div>
+        <div class="combo-row">
+            <div class="mini-stat"><span class="ms-label" id="cN1">-</span><div class="ms-val" id="cV1">-</div></div>
+            <div class="mini-stat"><span class="ms-label" id="cN2">-</span><div class="ms-val" id="cV2">-</div></div>
+            <div class="mini-stat"><span class="ms-label" id="cN3">-</span><div class="ms-val" id="cV3">-</div></div>
+            <div class="mini-stat"><span class="ms-label" id="cN4">-</span><div class="ms-val" id="cV4">-</div></div>
+        </div>
     </div>
 
-    <div class="logout-btn" onclick="systemLogout()">解除当前设备绑定并退出</div>
+    <div class="card">
+        <span class="card-label">&gt; TERMINAL_LOGS</span>
+        <div id="histList"></div>
+    </div>
+
+    <div class="card">
+        <span class="card-label">&gt; GLOBAL_ANALYTICS</span>
+        <div class="stat-grid">
+            <div class="stat-box"><span class="stat-t">MAIN</span><span id="acc-main" class="stat-v">--%</span></div>
+            <div class="stat-box"><span class="stat-t">DEF</span><span id="acc-def" class="stat-v">--%</span></div>
+            <div class="stat-box"><span class="stat-t">KILL</span><span id="acc-kill" class="stat-v" style="color:var(--danger)">--%</span></div>
+            <div class="stat-box"><span class="stat-t">B/S</span><span id="acc-bs" class="stat-v">--%</span></div>
+            <div class="stat-box"><span class="stat-t">O/E</span><span id="acc-oe" class="stat-v">--%</span></div>
+            <div class="stat-box"><span class="stat-t">TOTAL</span><span id="acc-total" class="stat-v" style="color:var(--primary)">--%</span></div>
+        </div>
+    </div>
 </div>
 
 <script>
-    // ==========================================================================
-    // CONFIGURATION AREA (USER SETTINGS)
-    // ==========================================================================
-    const SUPABASE_PROJECT_URL = 'https://eqgbuuuwjrzjnpdqjpqd.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_UrV5Hcw4qQjsuWTyW1cV7A_sFreUDTl';
-    
-    // 初始化 Supabase
-    var _supabase = window.supabase.createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
-
-    // ==========================================================================
-    // SYSTEM STATE VARIABLES (V1 CORE)
-    // ==========================================================================
-    var userLevel = 1;
-    var historicalLogs = [];
-    var isRunning = false;
-    var icuActive = false;
-    var modeIndex = 0; // 0=Logic, 1=Shadow, 2=Chaos
-
-    // ==========================================================================
-    // MODULE: CLOUD AUTHENTICATION (V26)
-    // ==========================================================================
-    async function processCloudLogin() {
-        var keyVal = document.getElementById('input-key').value.trim();
-        var btn = document.getElementById('btn-login');
-        var msg = document.getElementById('login-feedback');
-
-        if (keyVal === "") {
-            msg.innerText = "请输入卡密";
-            return;
+    /* 核心逻辑完全保留 index (4).html 版本 */
+    const CONFIG = {
+        API: "https://pc28.help/kj.json?limit=20",
+        REFRESH: 15,
+        C: { 
+            SCAL_GOLD: 3.81966, SQRT_OSC: 28.5, SQRT_ADD: 7.5515,
+            FISS_GOLD: 1.6180, TRI_DIV: 42.75, REV_GOLD: 0.61803,
+            WARN_DIV: 6.6666, EXT_DIV: 2.2222
         }
+    };
 
-        btn.innerText = "正在验证...";
-        btn.disabled = true;
+    const STATE = { history: [], timer: null };
 
-        try {
-            // 1. 查询数据库
-            const { data, error } = await _supabase
-                .from('licenses')
-                .select('*')
-                .eq('key_code', keyVal)
-                .single();
-
-            if (error || !data) {
-                throw new Error("授权码无效或网络错误");
+    const KERNEL = {
+        getD: (n) => parseInt(n.toFixed(6).split('.')[1][0]),
+        safeNum: (n) => Number(n) || 0,
+        analyzeStats: (list) => {
+            let stats = { b:0, s:0, o:0, e:0 };
+            let count = Math.min(list.length, 20); 
+            for(let i=0; i<count; i++) {
+                let s = list[i].sum;
+                if(s >= 14) stats.b++; else stats.s++;
+                if(s % 2 !== 0) stats.o++; else stats.e++;
             }
-
-            if (data.is_active === false) {
-                throw new Error("此授权已被系统禁用");
+            return stats;
+        },
+        run: (rawN1, rawN2, rawN3, sum, prev, history) => {
+            const C = CONFIG.C;
+            const n1 = KERNEL.safeNum(rawN1);
+            const n2 = KERNEL.safeNum(rawN2);
+            const n3 = KERNEL.safeNum(rawN3);
+            let seed = (n1 * 1.01 + n2 * 1.02 + n3 * 1.03) * 0.0001;
+            let w = { b: 10+seed, s: 10-seed, o: 10+seed, e: 10-seed };
+            if(history && history.length > 0) {
+                let stats = KERNEL.analyzeStats(history);
+                if(stats.b > stats.s + 3) w.b += 15;
+                if(stats.s > stats.b + 3) w.s += 15;
             }
-
-            // 2. HWID 校验 (V26 特性)
-            var localHWID = localStorage.getItem('cz_hwid_v2');
-            if (!localHWID) {
-                // 生成新的 HWID
-                localHWID = 'DEV-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-                localStorage.setItem('cz_hwid_v2', localHWID);
+            let r19 = (Math.sqrt(n1**2+n2**2+n3**2))/C.SCAL_GOLD;
+            let d19 = KERNEL.getD(r19);
+            if (d19 >= 5) { w.b += 50; w.s -= 20; } else { w.s += 50; w.b -= 20; }
+            let i19 = Math.floor(r19);
+            if ((i19 + d19) % 2 !== 0) { w.o += 40; w.e -= 15; } else { w.e += 40; w.o -= 15; }
+            let isDive = Math.abs(n1-n2) > 8;
+            let r16 = Math.sqrt(n1*n2*(1+Math.abs(n1-n2)/C.SQRT_OSC)+C.SQRT_ADD);
+            let d16 = KERNEL.getD(r16);
+            let sc16 = isDive ? 60 : 30; 
+            if(d16 >= 5) { w.b += sc16; w.s -= sc16/2; } else { w.s += sc16; w.b -= sc16/2; }
+            if(prev) {
+                let r14 = Math.sqrt(((n1-n2)**2) + ((n3**2)/(sum+1)) + C.FISS_GOLD);
+                let d14 = KERNEL.getD(r14);
+                let w14 = 25; 
+                let prevBs = prev.sum >= 14 ? 'Big' : 'Small';
+                if(d14<=4) { if(prevBs==='Big') w.b+=w14; else w.s+=w14; } else { if(prevBs==='Big') w.s+=w14; else w.b+=w14; }
             }
-
-            if (data.hwid && data.hwid !== localHWID) {
-                throw new Error("设备校验失败：此卡密已绑定其他设备");
-            }
-
-            if (!data.hwid) {
-                // 首次绑定
-                await _supabase.from('licenses').update({ hwid: localHWID }).eq('id', data.id);
-            }
-
-            // 3. 登录成功
-            localStorage.setItem('cz_session_data', JSON.stringify(data));
-            initializeInterface(data);
-
-        } catch (err) {
-            msg.innerText = err.message;
-            btn.innerText = "验证并连接服务器";
-            btn.disabled = false;
+            let r18 = ((n1+3.1415)*(n2+2.7182)*(n3+1.4142))/C.TRI_DIV;
+            (Math.floor(r18)%10%2!==0) ? w.o+=20 : w.e+=20;
+            let r2 = (n1+C.REV_GOLD)*C.REV_GOLD;
+            (Math.floor(r2)%2===0) ? w.o+=15 : w.e+=15;
+            let r10 = 280/(n1+C.EXT_DIV);
+            let dec10 = r10 - Math.floor(r10);
+            if(dec10 < 0.333) { if(w.b > w.s) w.b *= 0.8; else w.s *= 0.8; }
+            let r3 = (n1+n2+n3)/C.WARN_DIV;
+            let d3 = KERNEL.getD(r3);
+            if(d3===0 || d3===6) { w.b=10+seed; w.s=10-seed; w.o=10+seed; w.e=10-seed; }
+            const boost = (k1, k2) => { if(Math.abs(w[k1] - w[k2]) < 5) { if(w[k1] > w[k2]) w[k1] += 30; else w[k2] += 30; } };
+            boost('b', 's'); boost('o', 'e');
+            let minV = Math.min(w.b, w.s, w.o, w.e);
+            if(minV < 5) { let lift = Math.abs(minV) + 10; w.b += lift; w.s += lift; w.o += lift; w.e += lift; }
+            let totalInd = w.b + w.s + w.o + w.e || 1;
+            let nW = { b: (w.b / totalInd) * 10, s: (w.s / totalInd) * 10, o: (w.o / totalInd) * 10, e: (w.e / totalInd) * 10 };
+            let combos = [{ name: "大单", s: w.b + w.o }, { name: "大双", s: w.b + w.e }, { name: "小单", s: w.s + w.o }, { name: "小双", s: w.s + w.e }];
+            combos.forEach((c,i) => c.s += i*0.01);
+            combos.sort((a,b) => b.s - a.s);
+            let totalComb = combos.reduce((a,b)=>a+b.s,0) || 1;
+            let nCombos = combos.map(c => ({ name: c.name, s: (c.s / totalComb) * 10 }));
+            return { nW, nCombos };
         }
-    }
+    };
 
-    // 自动登录检查
-    (function checkAutoLogin() {
-        var session = localStorage.getItem('cz_session_data');
-        if (session) {
-            initializeInterface(JSON.parse(session));
-        }
-    })();
-
-    function systemLogout() {
-        if(confirm("确定要退出吗？这将清除本地授权。")) {
-            localStorage.removeItem('cz_session_data');
-            window.location.reload();
-        }
-    }
-
-    // ==========================================================================
-    // MODULE: UI INITIALIZATION
-    // ==========================================================================
-    function initializeInterface(userData) {
-        userLevel = userData.tier;
-
-        // 隐藏登录层
-        document.getElementById('auth-overlay-system').style.display = 'none';
-        // 显示主界面
-        document.getElementById('app-interface').style.display = 'block';
-
-        // 设置等级标签
-        var badgeText = "LITE";
-        if (userLevel === 2) badgeText = "PRO";
-        if (userLevel === 3) badgeText = "ULTIMATE";
-        document.getElementById('badge-tier').innerText = badgeText;
-
-        // 等级功能控制
-        if (userLevel >= 2) {
-            document.getElementById('box-money').style.display = 'flex';
-        }
-
-        if (userLevel === 3) {
-            document.getElementById('neuro-grid').style.display = 'grid';
-            document.getElementById('ctrl-mode').style.display = 'flex';
-            document.getElementById('ctrl-icu').style.display = 'flex';
-        }
-    }
-
-    // ==========================================================================
-    // MODULE: ANIMATION HELPERS (新增动画系统)
-    // ==========================================================================
-    function playNumberAnimation(elementId, targetValue, suffix) {
-        var element = document.getElementById(elementId);
-        var startValue = 0;
-        var duration = 800; // 毫秒
-        var startTime = null;
-
-        function animationStep(timestamp) {
-            if (!startTime) startTime = timestamp;
-            var progress = Math.min((timestamp - startTime) / duration, 1);
-            
-            // 缓动函数 easeOutExpo
-            var ease = (progress === 1) ? 1 : 1 - Math.pow(2, -10 * progress);
-            
-            var currentValue = Math.floor(ease * (targetValue - startValue) + startValue);
-            element.innerText = currentValue + suffix;
-
-            if (progress < 1) {
-                window.requestAnimationFrame(animationStep);
-            }
-        }
-
-        window.requestAnimationFrame(animationStep);
-    }
-
-    function renderHistoryStrip() {
-        var container = document.getElementById('history-view');
-        container.style.display = 'flex';
-        
-        // 清空
-        container.innerHTML = '';
-
-        // 倒序渲染，配合 CSS slide-in-right 动画
-        // 让最新的号码看起来是从右边滑进来的
-        var reversedLogs = [...historicalLogs].reverse();
-
-        for (var i = 0; i < reversedLogs.length; i++) {
-            var num = reversedLogs[i];
-            var ball = document.createElement('div');
-            ball.className = 'history-ball';
-            ball.innerText = num;
-            container.appendChild(ball);
-        }
-    }
-
-    // ==========================================================================
-    // MODULE: CORE LOGIC (V1 ORIGINAL)
-    // ==========================================================================
-    function triggerOracle() {
-        var moneyInput = document.getElementById('in-money');
-        var moneyVal = parseFloat(moneyInput.value);
-        if (isNaN(moneyVal)) moneyVal = 1000;
-
-        if (!isRunning) {
-            // 初始化阶段
-            var v3 = document.getElementById('in-n3').value;
-            var v2 = document.getElementById('in-n2').value;
-            var v1 = document.getElementById('in-n1').value;
-
-            if (v3 === "" || v2 === "" || v1 === "") {
-                alert("请补全前三期数据");
-                return;
-            }
-
-            historicalLogs = [parseInt(v3), parseInt(v2), parseInt(v1)];
-            isRunning = true;
-
-            // 切换 UI
-            document.getElementById('phase-init').style.display = 'none';
-            document.getElementById('phase-run').style.display = 'block';
-            document.getElementById('btn-exec').innerText = "提交更新 / UPDATE";
-
-        } else {
-            // 运行阶段
-            var newVal = document.getElementById('in-new').value;
-            if (newVal === "") {
-                alert("请输入最新一期号码");
-                return;
-            }
-
-            historicalLogs.shift();
-            historicalLogs.push(parseInt(newVal));
-            document.getElementById('in-new').value = '';
-        }
-
-        renderHistoryStrip();
-        executeCalculation(moneyVal);
-    }
-
-    function executeCalculation(budget) {
-        var n3 = historicalLogs[0];
-        var n2 = historicalLogs[1];
-        var n1 = historicalLogs[2];
-
-        var weightBig = 50;
-        var weightEven = 50;
-        var activeTriggers = [];
-
-        // 辅助函数
-        function getBigSmall(n) { return n >= 14 ? 1 : 0; }
-        function getOddEven(n) { return n % 2 === 0 ? 1 : 0; }
-
-        // --- 大小逻辑 (完整展开) ---
-        if (getBigSmall(n3) === getBigSmall(n2) && getBigSmall(n2) === getBigSmall(n1)) {
-            // 惯性逻辑
-            if (getBigSmall(n1) === 1) {
-                weightBig = 85;
-            } else {
-                weightBig = 15;
-            }
-            activeTriggers.push('n-inertia');
-        } else if (getBigSmall(n3) !== getBigSmall(n2) && getBigSmall(n2) !== getBigSmall(n1)) {
-            // 形态逻辑 (单跳)
-            if (getBigSmall(n1) === 1) {
-                weightBig = 20;
-            } else {
-                weightBig = 80;
-            }
-            activeTriggers.push('n-pattern');
-        } else if (n1 <= 4) {
-            // 极值回归 (小)
-            weightBig = 82;
-            activeTriggers.push('n-regress');
-        } else if (n1 >= 23) {
-            // 极值回归 (大)
-            weightBig = 18;
-            activeTriggers.push('n-regress');
-        } else if (n1 === 13 || n1 === 14) {
-            // 熵值吸附
-            if (getBigSmall(n1) === 1) {
-                weightBig = 60;
-            } else {
-                weightBig = 40;
-            }
-            activeTriggers.push('n-entropy');
-        } else {
-            // 基础概率
-            if (getBigSmall(n1) === 1) {
-                weightBig = 65;
-            } else {
-                weightBig = 35;
-            }
-        }
-
-        // --- 单双逻辑 (完整展开) ---
-        if (getOddEven(n3) === getOddEven(n2) && getOddEven(n2) === getOddEven(n1)) {
-            if (getOddEven(n1) === 1) {
-                weightEven = 85;
-            } else {
-                weightEven = 15;
-            }
-        } else if (getOddEven(n1) === getOddEven(n2)) {
-            if (getOddEven(n1) === 1) {
-                weightEven = 60;
-            } else {
-                weightEven = 40;
-            }
-        }
-
-        // --- 模式修正 ---
-        if (modeIndex === 1) {
-            // 暗影模式：反转
-            weightBig = 100 - weightBig;
-            weightEven = 100 - weightEven;
-        }
-
-        if (modeIndex === 2) {
-            // 混沌模式：随机扰动
-            var noise1 = Math.random() * 30 - 15;
-            var noise2 = Math.random() * 30 - 15;
-            weightBig = weightBig + noise1;
-            weightEven = weightEven + noise2;
-        }
-
-        // 钳制数值范围
-        if (weightBig > 90) weightBig = 90;
-        if (weightBig < 10) weightBig = 10;
-        if (weightEven > 90) weightEven = 90;
-        if (weightEven < 10) weightEven = 10;
-
-        // 计算结果
-        var conf = 50 + (Math.abs(weightBig - 50) + Math.abs(weightEven - 50)) / 2;
-        var strRes = "";
-        if (weightBig >= 50) strRes += "大"; else strRes += "小";
-        if (weightEven >= 50) strRes += "双"; else strRes += "单";
-
-        // 更新 UI (使用动画)
-        document.getElementById('val-core').innerText = strRes;
-        playNumberAnimation('val-conf', conf.toFixed(0), "%");
-
-        // 计算四象限
-        var pBE = (weightBig * weightEven) / 100;
-        var pBO = (weightBig * (100 - weightEven)) / 100;
-        var pSE = ((100 - weightBig) * weightEven) / 100;
-        var pSO = ((100 - weightBig) * (100 - weightEven)) / 100;
-
-        var list = [
-            { id: 'be', val: pBE },
-            { id: 'bo', val: pBO },
-            { id: 'se', val: pSE },
-            { id: 'so', val: pSO }
-        ];
-
-        // 排序
-        list.sort(function(a, b) {
-            return b.val - a.val;
-        });
-
-        // 渲染象限
-        var ids = ['be', 'bo', 'se', 'so'];
-        for (var i = 0; i < ids.length; i++) {
-            var id = ids[i];
-            var obj = list.find(function(x) { return x.id === id; });
-            var el = document.getElementById('cell-' + id);
-            var tag = document.getElementById('tag-' + id);
-            
-            // 动画数值
-            playNumberAnimation('p-' + id, obj.val.toFixed(0), "%");
-
-            // 重置样式
-            el.className = 'quad-cell';
-            tag.style.display = 'none';
-
-            // 热门
-            if (obj === list[0]) {
-                el.classList.add('status-hot');
-                tag.style.display = 'block';
-            }
-
-            // 杀组
-            if (obj === list[3]) {
-                el.classList.add('status-kill');
-                activeTriggers.push('n-kill');
-            }
-        }
-
-        // 神经元灯光控制
-        if (userLevel === 3) {
-            var allNeurons = document.querySelectorAll('.neuron-cell');
-            for (var k = 0; k < allNeurons.length; k++) {
-                allNeurons[k].classList.remove('active-neuron');
-            }
-            for (var j = 0; j < activeTriggers.length; j++) {
-                var tid = activeTriggers[j];
-                document.getElementById(tid).classList.add('active-neuron');
-            }
-        }
-
-        // 方案生成 (V1 样式 + 延迟动画)
-        var planHTML = '';
-        if (userLevel >= 2) {
-            var planDelay = 0;
-            function addPlan(type, title, profit, desc) {
-                planDelay += 0.1;
-                planHTML += '<div class="plan-card type-' + type + '" style="animation-delay:' + planDelay + 's">';
-                planHTML += '<div class="plan-header">';
-                planHTML += '<span class="plan-title">' + title + '</span>';
-                planHTML += '<span class="plan-profit">预期 +' + profit + '</span>';
-                planHTML += '</div>';
-                planHTML += '<div class="plan-desc">' + desc + '</div>';
-                planHTML += '</div>';
-            }
-
-            if (icuActive) {
-                addPlan('C', 'ICU 防守模式', (budget * 0.1).toFixed(0), '检测到极端数据波动，系统强制进入防守状态。建议极小额对冲或观望。');
-            } else {
-                if (conf > 80) {
-                    addPlan('S', 'S级 极值共振', (budget * 0.95).toFixed(0), '算法检测到多维数据共振。建议重仓：' + list[0].id.toUpperCase());
-                } else if (list[0].val > 40) {
-                    addPlan('A', 'A级 趋势锁定', (budget * 0.6).toFixed(0), '单一维度优势明显。建议跟随主趋势。');
-                } else {
-                    addPlan('C', 'B级 稳健对冲', (budget * 0.3).toFixed(0), '数据离散度高。建议双向锚定防守，控制回撤。');
+    const APP = {
+        init: () => APP.sync(),
+        sync: async () => {
+            const timer = document.getElementById('timer');
+            timer.innerText = "SYNCING...";
+            try {
+                const t = Date.now();
+                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(CONFIG.API + "&t=" + t)}`);
+                const json = await res.json();
+                const data = JSON.parse(json.contents).data;
+                if(data && data.length) {
+                    STATE.history = data.map(i => {
+                        const n = i.opennum.split('+').map(Number);
+                        return { q: i.qihao, n1:n[0], n2:n[1], n3:n[2], sum: parseInt(i.sum) };
+                    });
+                    APP.render();
                 }
+            } catch(e) { timer.innerText = "E_DATA"; }
+            APP.startTimer();
+        },
+        render: () => {
+            const list = STATE.history;
+            if(list.length < 5) return;
+            const cur = list[0];
+            const res = KERNEL.run(cur.n1, cur.n2, cur.n3, cur.sum, list[1], list);
+            try {
+                const nextQ = parseInt(cur.q) + 1;
+                document.getElementById('nextQ').innerText = "TARGET:" + nextQ;
+            } catch(e) { document.getElementById('nextQ').innerText = "TARGET:ERROR"; }
+            document.getElementById('tMain').innerHTML = `<span class="c-main">${res.nCombos[0].name}</span> <span style="font-size:0.6em;opacity:0.3">|</span> <span style="opacity:0.8;font-size:0.8em">${res.nCombos[1].name}</span>`;
+            document.getElementById('tDef').innerText = res.nCombos[2].name;
+            document.getElementById('tKill').innerText = res.nCombos[3].name;
+            const draw = (id, v) => {
+                document.getElementById('b'+id).style.width = Math.min(100, v*10) + '%';
+                document.getElementById('v'+id).innerText = v.toFixed(1);
+            };
+            draw('Big', res.nW.b); draw('Sml', res.nW.s);
+            draw('Odd', res.nW.o); draw('Evn', res.nW.e);
+            for(let i=0; i<4; i++) {
+                document.getElementById(`cN${i+1}`).innerText = res.nCombos[i].name;
+                document.getElementById(`cV${i+1}`).innerText = res.nCombos[i].s.toFixed(1);
             }
+            APP.calcStats(list);
+        },
+        calcStats: (list) => {
+            const box = document.getElementById('histList');
+            box.innerHTML = '';
+            let s = { main:0, def:0, kill:0, bs:0, oe:0, total:0 };
+            for(let i=0; i<list.length-2; i++) {
+                const t = list[i]; 
+                const inp = list[i+1]; 
+                const sim = KERNEL.run(inp.n1, inp.n2, inp.n3, inp.sum, list[i+2], list);
+                const rBig = t.sum >= 14;
+                const rOdd = t.sum % 2 !== 0;
+                const rStr = (rBig?'大':'小') + (rOdd?'单':'双');
+                s.total++;
+                let isMain = (sim.nCombos[0].name === rStr || sim.nCombos[1].name === rStr);
+                let isDef = (sim.nCombos[2].name === rStr);
+                let isKillFail = (sim.nCombos[3].name === rStr);
+                if(isMain) s.main++;
+                if(isDef) s.def++;
+                if(!isKillFail) s.kill++;
+                if((sim.nW.b > sim.nW.s) === rBig) s.bs++;
+                if((sim.nW.o > sim.nW.e) === rOdd) s.oe++;
+                let tag = '', cls = '';
+                if(isMain) { tag = 'HIT'; cls = 'tag-hit'; }
+                else if(isDef) { tag = 'DEF'; cls = 'tag-def'; }
+                else { tag = 'ERR'; cls = 'tag-miss'; }
+                box.innerHTML += `
+                    <div class="log-row">
+                        <div class="log-q">${t.q.slice(-4)}</div>
+                        <div class="log-r">${rStr} [${t.sum}]</div>
+                        <div class="${cls}">${tag}</div>
+                    </div>`;
+            }
+            const pct = v => Math.round((v/s.total)*100) + "%";
+            document.getElementById('acc-main').innerText = pct(s.main);
+            document.getElementById('acc-def').innerText = pct(s.def);
+            document.getElementById('acc-kill').innerText = pct(s.kill);
+            document.getElementById('acc-bs').innerText = pct(s.bs);
+            document.getElementById('acc-oe').innerText = pct(s.oe);
+            document.getElementById('acc-total').innerText = pct(s.main + s.def);
+        },
+        startTimer: () => {
+            if(STATE.timer) clearInterval(STATE.timer);
+            let t = CONFIG.REFRESH;
+            STATE.timer = setInterval(() => {
+                t--;
+                if(t<=0) { clearInterval(STATE.timer); APP.sync(); }
+                else document.getElementById('timer').innerText = `RST_${t}S`;
+            }, 1000);
         }
-
-        document.getElementById('list-plans').innerHTML = planHTML;
-        document.getElementById('panel-res').style.display = 'block';
-        
-        // 平滑滚动到底部
-        setTimeout(function() {
-            window.scrollTo({
-                top: document.body.scrollHeight,
-                behavior: 'smooth'
-            });
-        }, 100);
-    }
-
-    // 模式切换功能
-    function cycleAppMode() {
-        if (userLevel < 3) return;
-        
-        modeIndex++;
-        if (modeIndex > 2) modeIndex = 0;
-
-        var body = document.body;
-        var btn = document.getElementById('ctrl-mode');
-        
-        // 重置类名
-        body.classList.remove('mode-shadow');
-        body.classList.remove('mode-chaos');
-
-        if (modeIndex === 0) {
-            btn.innerText = "☀";
-        } else if (modeIndex === 1) {
-            body.classList.add('mode-shadow');
-            btn.innerText = "☾";
-        } else if (modeIndex === 2) {
-            body.classList.add('mode-chaos');
-            btn.innerText = "🎲";
-        }
-
-        if (isRunning) {
-            executeCalculation(parseFloat(document.getElementById('in-money').value));
-        }
-    }
-
-    function toggleICUState() {
-        if (userLevel < 3) return;
-
-        icuActive = !icuActive;
-        var body = document.body;
-        
-        if (icuActive) {
-            body.classList.add('mode-icu');
-        } else {
-            body.classList.remove('mode-icu');
-        }
-
-        if (isRunning) {
-            executeCalculation(parseFloat(document.getElementById('in-money').value));
-        }
-    }
-
+    };
+    window.onload = APP.init;
 </script>
 </body>
 </html>
