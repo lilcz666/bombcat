@@ -3,176 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Cz算法 V5 [PIXEL]</title>
-    <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+    <title>Cz算法 V5 [HYBRID]</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Silkscreen&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            /* 像素风配色：更高对比度 */
-            --bg-deep: #000000;
-            --card-bg: #111111;
-            --card-border: #333333;
-            --primary: #00ff00; /* 经典黑客绿 */
-            --accent: #ffff00; /* 亮黄 */
-            --danger: #ff0044; /* 像素红 */
-            --success: #00ff00; 
-            --purple: #ff00ff; /* 霓虹紫 */
-            --cyan: #00ffff;
-            --text-main: #ffffff;
-            --text-sub: #888888;
-            --font-pixel: 'Silkscreen', cursive, 'Roboto Mono', monospace;
+            --bg-deep: #050505;
+            --card-bg: rgba(15, 15, 18, 0.95);
+            --card-border: #333;
+            --primary: #3b82f6; 
+            --accent: #f59e0b; 
+            --danger: #ef4444; 
+            --success: #10b981;
+            --purple: #8b5cf6; 
+            --cyan: #06b6d4;
+            --text-main: #ffffff; 
+            --text-sub: #94a3b8;
+            --font-ui: 'Rajdhani', sans-serif;
+            --font-pixel: 'Silkscreen', cursive;
+            --font-num: 'Roboto Mono', monospace;
         }
 
-        * { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            margin: 0; padding: 0; 
-            /* 强制像素渲染质感 */
-            image-rendering: pixelated;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
 
         body {
             background-color: var(--bg-deep);
-            background-image: 
-                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
-                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 4px, 3px 100%; /* 复古扫描线效果 */
-            color: var(--text-main); 
-            font-family: var(--font-pixel);
-            min-height: 100vh; 
-            display: flex; flex-direction: column; align-items: center; 
-            padding: 20px 16px;
+            background-image: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.12) 0%, transparent 50%);
+            color: var(--text-main); font-family: var(--font-ui);
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px 16px;
         }
 
-        .container { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 20px; }
+        .container { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 20px; }
 
-        /* 顶部 Header */
+        /* 顶部 Header：现代与像素结合 */
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
-            border: 4px solid var(--text-main);
-            padding: 8px 12px;
-            background: var(--card-bg);
-            box-shadow: 4px 4px 0px var(--primary);
+            padding: 10px; border-bottom: 2px solid var(--primary);
         }
-        .brand { font-size: 1.2rem; font-weight: 700; text-transform: uppercase; }
-        .brand span { color: var(--primary); }
+        .brand { font-size: 1.4rem; font-weight: 700; letter-spacing: 1px; }
+        .brand span { color: var(--primary); font-family: var(--font-pixel); font-size: 0.9em; }
 
         .status-badge { 
-            font-size: 0.7rem; color: var(--primary); 
-            display: flex; align-items: center; gap: 8px;
+            font-family: var(--font-pixel); font-size: 0.6rem; 
+            color: var(--success); display: flex; align-items: center; gap: 6px; 
         }
-        .pulse-dot { width: 8px; height: 8px; background: var(--primary); animation: blink 1s steps(2, start) infinite; }
-        @keyframes blink { to { visibility: hidden; } }
+        .pulse-dot { width: 6px; height: 6px; background: var(--success); animation: blink 1s steps(2) infinite; }
+        @keyframes blink { to { opacity: 0; } }
 
-        /* 像素风卡片 */
+        /* 混合风卡片 */
         .card { 
             background: var(--card-bg); 
-            border: 4px solid var(--card-border);
-            padding: 16px; 
-            position: relative;
-            box-shadow: 6px 6px 0px #000;
+            border: 1px solid var(--card-border);
+            border-left: 4px solid var(--card-border); /* 像素化的侧边重感 */
+            padding: 18px; position: relative;
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.3);
         }
         .card-label { 
-            font-size: 0.7rem; color: var(--accent); 
-            margin-bottom: 12px; 
+            font-size: 0.65rem; font-weight: 700; color: var(--text-sub); 
+            letter-spacing: 1px; margin-bottom: 16px; 
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 2px dashed var(--card-border);
-            padding-bottom: 6px;
-            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;
         }
-        .next-q { color: var(--primary); text-shadow: 2px 2px 0px #000; }
+        .next-q { font-family: var(--font-pixel); color: var(--primary); font-size: 0.7rem; }
 
-        /* 核心战术板 */
-        .tac-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        /* 核心预测区 */
+        .tac-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .tac-box { 
-            border: 2px solid var(--card-border); 
-            padding: 12px 4px; 
-            display: flex; flex-direction: column; align-items: center; 
+            background: rgba(255,255,255,0.02); 
+            border: 1px solid rgba(255,255,255,0.05); 
+            padding: 14px 8px; display: flex; flex-direction: column; align-items: center; 
         }
         .tac-box.main { 
-            grid-column: span 2; 
-            border-color: var(--primary);
-            background: rgba(0, 255, 0, 0.05);
+            grid-column: span 2; border-color: var(--primary);
+            background: linear-gradient(90deg, rgba(59,130,246,0.05), transparent);
         }
         .tac-box.kill { border-color: var(--danger); }
-        .tac-title { font-size: 0.6rem; color: var(--text-sub); margin-bottom: 8px; }
-        .tac-val { font-size: 1.5rem; font-weight: 700; text-shadow: 3px 3px 0px #000; }
-        .c-main { color: var(--primary); }
+        .tac-title { font-size: 0.6rem; color: var(--text-sub); margin-bottom: 4px; text-transform: uppercase; }
+        .tac-val { font-size: 1.8rem; font-weight: 700; letter-spacing: -1px; }
+        .c-main { color: var(--primary); text-shadow: 0 0 10px rgba(59,130,246,0.5); }
         .c-def { color: var(--accent); }
-        .c-kill { color: var(--danger); text-decoration: line-through; }
+        .c-kill { color: var(--danger); text-decoration: line-through; opacity: 0.6; }
 
-        /* 能量矩阵 */
-        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
-        .hud-item { display: flex; flex-direction: column; gap: 8px; }
-        .hud-head { display: flex; justify-content: space-between; font-size: 0.7rem; }
-        .hud-track { height: 12px; background: #222; border: 2px solid #444; position: relative; }
-        .hud-bar { height: 100%; transition: width 0.3s steps(10); }
+        /* 能量矩阵：像素条 */
+        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 16px; margin-top: 10px; }
+        .hud-item { display: flex; flex-direction: column; gap: 6px; }
+        .hud-head { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; font-family: var(--font-num); }
+        .hud-track { 
+            height: 10px; background: #1a1a1a; 
+            border: 1px solid #333; overflow: hidden; 
+        }
+        .hud-bar { 
+            height: 100%; transition: width 0.4s steps(10); /* 像素步进效果 */
+        }
 
-        .combo-row { display: flex; justify-content: space-between; margin-top: 20px; border-top: 2px solid var(--card-border); padding-top: 12px; }
+        .combo-row { display: flex; justify-content: space-between; margin-top: 24px; padding-top: 16px; border-top: 1px dashed #333; }
         .mini-stat { text-align: center; flex: 1; }
-        .ms-label { font-size: 0.55rem; color: var(--text-sub); margin-bottom: 4px; display: block; }
-        .ms-val { font-size: 0.9rem; color: #fff; }
+        .ms-label { font-size: 0.6rem; color: var(--text-sub); margin-bottom: 4px; display: block; }
+        .ms-val { font-family: var(--font-num); font-weight: 700; font-size: 0.9rem; }
 
         /* 历史日志 */
-        #histList { 
-            display: flex; flex-direction: column; gap: 4px; 
-            max-height: 300px; overflow-y: scroll; 
-        }
+        #histList { display: flex; flex-direction: column; gap: 6px; max-height: 350px; overflow-y: auto; padding-right: 4px; }
+        #histList::-webkit-scrollbar { width: 3px; }
+        #histList::-webkit-scrollbar-thumb { background: var(--primary); }
+
         .log-row { 
-            display: grid; grid-template-columns: 70px 1fr 60px; 
-            padding: 8px; font-size: 0.75rem; 
-            background: #1a1a1a; border: 1px solid #333;
+            display: grid; grid-template-columns: 60px 1fr 60px; align-items: center; 
+            padding: 10px 12px; background: rgba(255,255,255,0.02); 
+            font-family: var(--font-num); font-size: 0.8rem; border-left: 2px solid transparent; 
         }
-        .log-row:first-child { border-color: var(--primary); background: #002200; }
-        .log-q { color: var(--text-sub); }
-        .log-r { text-align: center; color: #fff; }
-        .tag-hit { color: var(--primary); }
-        .tag-def { color: var(--accent); }
-        .tag-miss { color: var(--danger); }
+        .log-row:first-child { background: rgba(59,130,246,0.1); border-left-color: var(--primary); }
+        .log-q { color: var(--text-sub); font-size: 0.75rem; }
+        .log-r { text-align: center; font-weight: 700; color: #fff; }
+        .tag-hit { color: var(--success); font-family: var(--font-pixel); font-size: 0.6rem; }
+        .tag-def { color: var(--accent); font-family: var(--font-pixel); font-size: 0.6rem; }
+        .tag-miss { color: var(--danger); font-family: var(--font-pixel); font-size: 0.6rem; opacity: 0.7; }
 
-        /* 底部统计统计 */
-        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .stat-box { border: 2px solid var(--card-border); padding: 8px 0; text-align: center; background: #000; }
-        .stat-t { font-size: 0.5rem; color: var(--text-sub); margin-bottom: 4px; }
-        .stat-v { font-size: 0.9rem; color: #fff; }
-
-        /* 隐藏滚动条但保留功能 */
-        #histList::-webkit-scrollbar { width: 6px; }
-        #histList::-webkit-scrollbar-thumb { background: var(--card-border); }
+        /* 统计区 */
+        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .stat-box { background: #000; border: 1px solid #222; padding: 12px 0; text-align: center; }
+        .stat-t { font-size: 0.55rem; color: var(--text-sub); display: block; margin-bottom: 4px; }
+        .stat-v { font-family: var(--font-num); font-size: 1rem; font-weight: 700; color: #fff; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <div class="brand">CZ_SYSTEM <span>V5</span></div>
-        <div class="status-badge"><div class="pulse-dot"></div> <span id="timer">LINKING</span></div>
+        <div class="brand">CZ_ALGO <span>V5</span></div>
+        <div class="status-badge"><div class="pulse-dot"></div> <span id="timer">SYNCING</span></div>
     </div>
 
     <div class="card">
         <div class="card-label">
-            <span>&gt; CORE_SIGNAL</span>
-            <span id="nextQ" class="next-q">TARGET: --</span>
+            <span>TACTICAL CORE // 核心预测</span>
+            <span id="nextQ" class="next-q">TARGET_--</span>
         </div>
-        
         <div class="tac-grid">
             <div class="tac-box main">
-                <span class="tac-title">PRIORITY_ALPHA</span>
+                <span class="tac-title">PRIORITY</span>
                 <div id="tMain" class="tac-val c-main">-- / --</div>
             </div>
             <div class="tac-box">
-                <span class="tac-title">DEFENSE_BETA</span>
+                <span class="tac-title">DEFENSE</span>
                 <div id="tDef" class="tac-val c-def">--</div>
             </div>
             <div class="tac-box kill">
-                <span class="tac-title">ERASE_GAMMA</span>
+                <span class="tac-title">KILL</span>
                 <div id="tKill" class="tac-val c-kill">--</div>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <span class="card-label">&gt; ENERGY_MATRIX</span>
+        <span class="card-label">ENERGY MATRIX // 权重分布</span>
         <div class="hud-grid">
             <div class="hud-item">
                 <div class="hud-head"><span>BIG</span> <span id="vBig">0.0</span></div>
@@ -192,33 +175,33 @@
             </div>
         </div>
         <div class="combo-row">
-            <div class="mini-stat"><span class="ms-label" id="cN1">-</span><div class="ms-val" id="cV1">-</div></div>
-            <div class="mini-stat"><span class="ms-label" id="cN2">-</span><div class="ms-val" id="cV2">-</div></div>
-            <div class="mini-stat"><span class="ms-label" id="cN3">-</span><div class="ms-val" id="cV3">-</div></div>
-            <div class="mini-stat"><span class="ms-label" id="cN4">-</span><div class="ms-val" id="cV4">-</div></div>
+            <div class="mini-stat"><span class="ms-label" id="cN1">-</span><div class="ms-val c-main" id="cV1">-</div></div>
+            <div class="mini-stat"><span class="ms-label" id="cN2">-</span><div class="ms-val c-main" id="cV2">-</div></div>
+            <div class="mini-stat"><span class="ms-label" id="cN3">-</span><div class="ms-val c-def" id="cV3">-</div></div>
+            <div class="mini-stat"><span class="ms-label" id="cN4">-</span><div class="ms-val c-kill" id="cV4">-</div></div>
         </div>
     </div>
 
     <div class="card">
-        <span class="card-label">&gt; TERMINAL_LOGS</span>
+        <span class="card-label">TERMINAL LOGS // 全部20期</span>
         <div id="histList"></div>
     </div>
 
-    <div class="card">
-        <span class="card-label">&gt; GLOBAL_ANALYTICS</span>
+    <div class="card" style="padding-bottom: 25px;">
+        <span class="card-label">GLOBAL ANALYTICS // 全周期</span>
         <div class="stat-grid">
-            <div class="stat-box"><span class="stat-t">MAIN</span><span id="acc-main" class="stat-v">--%</span></div>
-            <div class="stat-box"><span class="stat-t">DEF</span><span id="acc-def" class="stat-v">--%</span></div>
-            <div class="stat-box"><span class="stat-t">KILL</span><span id="acc-kill" class="stat-v" style="color:var(--danger)">--%</span></div>
-            <div class="stat-box"><span class="stat-t">B/S</span><span id="acc-bs" class="stat-v">--%</span></div>
-            <div class="stat-box"><span class="stat-t">O/E</span><span id="acc-oe" class="stat-v">--%</span></div>
-            <div class="stat-box"><span class="stat-t">TOTAL</span><span id="acc-total" class="stat-v" style="color:var(--primary)">--%</span></div>
+            <div class="stat-box"><span class="stat-t">主力 (MAIN)</span><span id="acc-main" class="stat-v c-main">--%</span></div>
+            <div class="stat-box"><span class="stat-t">防守 (DEF)</span><span id="acc-def" class="stat-v c-def">--%</span></div>
+            <div class="stat-box"><span class="stat-t">杀组 (KILL)</span><span id="acc-kill" class="stat-v" style="color:var(--danger)">--%</span></div>
+            <div class="stat-box"><span class="stat-t">大小 (B/S)</span><span id="acc-bs" class="stat-v">--%</span></div>
+            <div class="stat-box"><span class="stat-t">单双 (O/E)</span><span id="acc-oe" class="stat-v">--%</span></div>
+            <div class="stat-box"><span class="stat-t">综合 (TOTAL)</span><span id="acc-total" class="stat-v">--%</span></div>
         </div>
     </div>
 </div>
 
 <script>
-    /* 核心逻辑完全保留 index (4).html 版本 */
+    /* 保留 index (4).html 的全部逻辑 */
     const CONFIG = {
         API: "https://pc28.help/kj.json?limit=20",
         REFRESH: 15,
@@ -302,7 +285,7 @@
         init: () => APP.sync(),
         sync: async () => {
             const timer = document.getElementById('timer');
-            timer.innerText = "SYNCING...";
+            timer.innerText = "SYNCING";
             try {
                 const t = Date.now();
                 const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(CONFIG.API + "&t=" + t)}`);
@@ -315,7 +298,7 @@
                     });
                     APP.render();
                 }
-            } catch(e) { timer.innerText = "E_DATA"; }
+            } catch(e) { timer.innerText = "OFFLINE"; }
             APP.startTimer();
         },
         render: () => {
@@ -325,9 +308,9 @@
             const res = KERNEL.run(cur.n1, cur.n2, cur.n3, cur.sum, list[1], list);
             try {
                 const nextQ = parseInt(cur.q) + 1;
-                document.getElementById('nextQ').innerText = "TARGET:" + nextQ;
-            } catch(e) { document.getElementById('nextQ').innerText = "TARGET:ERROR"; }
-            document.getElementById('tMain').innerHTML = `<span class="c-main">${res.nCombos[0].name}</span> <span style="font-size:0.6em;opacity:0.3">|</span> <span style="opacity:0.8;font-size:0.8em">${res.nCombos[1].name}</span>`;
+                document.getElementById('nextQ').innerText = "TARGET_" + nextQ;
+            } catch(e) { document.getElementById('nextQ').innerText = "TARGET_ERR"; }
+            document.getElementById('tMain').innerHTML = `<span class="c-main">${res.nCombos[0].name}</span> <span style="font-size:0.5em;opacity:0.3;font-family:var(--font-pixel)">/</span> <span style="color:var(--text-sub);font-size:0.8em">${res.nCombos[1].name}</span>`;
             document.getElementById('tDef').innerText = res.nCombos[2].name;
             document.getElementById('tKill').innerText = res.nCombos[3].name;
             const draw = (id, v) => {
@@ -357,18 +340,16 @@
                 let isMain = (sim.nCombos[0].name === rStr || sim.nCombos[1].name === rStr);
                 let isDef = (sim.nCombos[2].name === rStr);
                 let isKillFail = (sim.nCombos[3].name === rStr);
-                if(isMain) s.main++;
-                if(isDef) s.def++;
-                if(!isKillFail) s.kill++;
+                if(isMain) s.main++; if(isDef) s.def++; if(!isKillFail) s.kill++;
                 if((sim.nW.b > sim.nW.s) === rBig) s.bs++;
                 if((sim.nW.o > sim.nW.e) === rOdd) s.oe++;
                 let tag = '', cls = '';
                 if(isMain) { tag = 'HIT'; cls = 'tag-hit'; }
                 else if(isDef) { tag = 'DEF'; cls = 'tag-def'; }
-                else { tag = 'ERR'; cls = 'tag-miss'; }
+                else { tag = 'MISS'; cls = 'tag-miss'; }
                 box.innerHTML += `
                     <div class="log-row">
-                        <div class="log-q">${t.q.slice(-4)}</div>
+                        <div class="log-q">${t.q.slice(-4)}期</div>
                         <div class="log-r">${rStr} [${t.sum}]</div>
                         <div class="${cls}">${tag}</div>
                     </div>`;
