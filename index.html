@@ -4,42 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>BOMBCAT!!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <style>
-        /* 1. 尝试加载 Zpix (最像素) 国内高速镜像 */
+        /* 强制加载中文像素字体 */
         @font-face {
             font-family: 'Zpix';
             src: url('https://cdn.jsdelivr.net/gh/SolidZORO/zpix-pixel-font@master/dist/zpix.woff2') format('woff2');
-            font-display: swap;
         }
 
         :root {
-            --bg: #0A0A0A;
-            --panel: #161616;
-            --border: #2A2A2A;
-            --gold: #FFD700;
-            --green: #00FF88;
-            --white: #F5EEDC;
-            --red: #FF3E3E;
-            --blue: #00A3FF;
-            --dim: #555555;
-            /* 字体备份：如果 Zpix 加载慢，先用等宽字体顶住像素质感 */
-            --font-pixel: 'Zpix', 'Silkscreen', 'Courier New', Courier, monospace;
+            --bg: #0A0A0A;          /* 卫衣极黑 */
+            --panel: #161616;       /* 面板碳灰 */
+            --border: #2A2A2A;      /* 边框 */
+            --gold: #FFD700;        /* 亮金（帽子/期号） */
+            --green: #00FF88;       /* 翠绿（盈利/状态） */
+            --white: #F5EEDC;       /* 奶白（主文字） */
+            --red: #FF3E3E;         /* 警示红 */
+            --blue: #00A3FF;        /* 科技蓝 */
+            --dim: #555555;         /* 暗灰 */
+            --font-pixel: 'Zpix', 'Silkscreen', sans-serif;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; image-rendering: pixelated; }
 
         body {
             background-color: var(--bg);
-            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
-            background-size: 100% 3px;
             color: var(--white);
             font-family: var(--font-pixel);
             padding: 15px;
             display: flex; flex-direction: column; align-items: center;
             line-height: 1.4;
-            overflow-x: hidden;
         }
 
         .container { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
@@ -50,9 +46,9 @@
             padding: 12px 5px; border-bottom: 2px solid var(--gold);
         }
         .logo { font-size: 1.2rem; color: var(--gold); font-weight: bold; }
-        #timer { font-size: 11px; color: var(--green); display: flex; align-items: center; gap: 4px; }
+        #timer { font-size: 11px; color: var(--green); }
 
-        /* 卡片样式 */
+        /* 高级像素卡片 */
         .card {
             background: var(--panel);
             border: 1px solid var(--border);
@@ -64,7 +60,7 @@
         .card-label {
             font-size: 10px; color: var(--dim); margin-bottom: 12px;
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #222; padding-bottom: 8px;
+            border-bottom: 1px solid #222; padding-bottom: 6px;
         }
 
         /* 核心预测区域 */
@@ -86,13 +82,13 @@
         .active-gold { background: var(--gold); box-shadow: 0 0 10px rgba(255,215,0,0.3); }
         .active-green { background: var(--green); }
 
-        /* 权重细节 */
+        /* 组合权重细则 (功能保留) */
         .weight-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 15px; }
         .weight-box { background: #111; border: 1px solid var(--border); padding: 8px 0; text-align: center; }
         .wb-name { font-size: 9px; color: var(--dim); display: block; margin-bottom: 2px; }
         .wb-val { font-size: 11px; font-weight: bold; }
 
-        /* 日志记录 */
+        /* 历史日志 */
         .log-list { display: flex; flex-direction: column; gap: 1px; max-height: 250px; overflow-y: auto; background: #000; border: 1px solid var(--border); }
         .log-row {
             display: grid; grid-template-columns: 80px 1fr 60px;
@@ -105,9 +101,12 @@
         .tag-def { color: var(--gold); border-color: var(--gold); }
         .tag-miss { color: var(--red); border-color: var(--red); }
 
-        /* 统计面板 */
+        /* 六维统计方块 (功能保留) */
         .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .stat-box { background: var(--panel); border: 1px solid var(--border); padding: 10px 0; text-align: center; }
+        .stat-box { 
+            background: var(--panel); border: 1px solid var(--border); 
+            padding: 12px 0; text-align: center;
+        }
         .stat-box i { font-size: 12px; color: var(--dim); margin-bottom: 3px; }
         .st-v { display: block; font-size: 14px; color: var(--gold); font-weight: bold; }
 
@@ -120,7 +119,7 @@
 <div class="container">
     <div class="top-nav">
         <div class="logo"><i class="ph-bold ph-cat"></i> BombCat!!</div>
-        <div id="timer"><i class="ph-bold ph-lightning"></i> 连接链路中...</div>
+        <div id="timer"><i class="ph-bold ph-lightning"></i> 链路连接中...</div>
     </div>
 
     <div class="card">
@@ -191,7 +190,7 @@
 </div>
 
 <script>
-    // 逻辑部分 100% 保持 V5 核心逻辑
+    // 逻辑部分 100% 保持 index(4).html 的 V5 核心，不作任何删减
     const CONFIG = {
         API: "https://pc28.help/kj.json?limit=20",
         REFRESH: 15,
@@ -274,7 +273,7 @@
     const APP = {
         init: () => APP.sync(),
         sync: async () => {
-            document.getElementById('timer').innerHTML = `<i class="ph-bold ph-arrows-clockwise"></i> 通讯链路连接中...`;
+            document.getElementById('timer').innerHTML = `<i class="ph-bold ph-arrows-clockwise"></i> 正在接入区块数据...`;
             try {
                 const t = Date.now();
                 const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(CONFIG.API + "&t=" + t)}`);
@@ -287,7 +286,7 @@
                     });
                     APP.render();
                 }
-            } catch(e) { document.getElementById('timer').innerText = "链路通讯故障"; }
+            } catch(e) { document.getElementById('timer').innerText = "链路通讯中断"; }
             APP.startTimer();
         },
         render: () => {
@@ -355,7 +354,7 @@
             STATE.timer = setInterval(() => {
                 t--;
                 if(t<=0) { clearInterval(STATE.timer); APP.sync(); }
-                else document.getElementById('timer').innerHTML = `<i class="ph-bold ph-timer"></i> 数据刷新: ${t}S`;
+                else document.getElementById('timer').innerHTML = `<i class="ph-bold ph-timer"></i> 下次同步: ${t}S`;
             }, 1000);
         }
     };
