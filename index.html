@@ -334,7 +334,7 @@
                 let isKillFail = (sim.nCombos[3].name === rStr);
                 if(isMain) s.main++; if(isDef) s.def++; if(!isKillFail) s.kill++;
                 if((sim.nW.b > sim.nW.s) === t.sum >= 14) s.bs++;
-                if((sim.nW.o > sim.nW.e) === t.sum % 2 !== 0) s.oe++;
+                if((sim.nW.o > sim.nW.e) === (t.sum % 2 !== 0)) s.oe++;
 
                 let tag = isMain ? 'HIT' : (isDef ? 'DEF' : 'MIS');
                 let cls = isMain ? 'tag-hit' : (isDef ? 'tag-def' : 'tag-miss');
