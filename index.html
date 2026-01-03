@@ -193,7 +193,7 @@
     // 逻辑部分 100% 保持 index(4).html 的 V5 核心，不作任何删减
     const CONFIG = {
         API: "https://pc28.help/kj.json?limit=20",
-        REFRESH: 15,
+        REFRESH: 25,
         C: { 
             SCAL_GOLD: 3.81966, SQRT_OSC: 28.5, SQRT_ADD: 7.5515,
             FISS_GOLD: 1.6180, TRI_DIV: 42.75, REV_GOLD: 0.61803,
@@ -279,7 +279,7 @@
             // 定义两条线路
             const lines = [
                 // 线路1: 高速线 (corsproxy)
-                { name: "高速", url: `https://corsproxy.io/?${encodeURIComponent(CONFIG.API + "&t=" + time)}`, type: "direct" },
+                { name: "高速", url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(CONFIG.API + "&t=" + time)}`, type: "direct" },
                 // 线路2: 稳定线 (allorigins)
                 { name: "备用", url: `https://api.allorigins.win/get?url=${encodeURIComponent(CONFIG.API + "&t=" + time)}`, type: "wrap" }
             ];
