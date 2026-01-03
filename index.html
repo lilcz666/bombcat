@@ -273,20 +273,56 @@
     const APP = {
         init: () => APP.sync(),
         sync: async () => {
-            document.getElementById('timer').innerHTML = `<i class="ph-bold ph-arrows-clockwise"></i> 正在接入区块数据...`;
+            const time = Date.now();
+            const logStatus = (msg) => document.getElementById('timer').innerHTML = `<i class="ph-bold ph-arrows-clockwise"></i> ${msg}`;
+            
+            // 定义两条线路
+            const lines = [
+                // 线路1: 高速线 (corsproxy)
+                { name: "高速", url: `https://corsproxy.io/?${encodeURIComponent(CONFIG.API + "&t=" + time)}`, type: "direct" },
+                // 线路2: 稳定线 (allorigins)
+                { name: "备用", url: `https://api.allorigins.win/get?url=${encodeURIComponent(CONFIG.API + "&t=" + time)}`, type: "wrap" }
+            ];
+
             try {
-                const t = Date.now();
-                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(CONFIG.API + "&t=" + t)}`);
-                const json = await res.json();
-                const data = JSON.parse(json.contents).data;
-                if(data && data.length) {
-                    STATE.history = data.map(i => {
-                        const n = i.opennum.split('+').map(Number);
-                        return { q: i.qihao, n1:n[0], n2:n[1], n3:n[2], sum: parseInt(i.sum) };
-                    });
-                    APP.render();
+                // --- 第一步：尝试高速线 ---
+                logStatus("正在接入高速链路...");
+                let res = await fetch(lines[0].url);
+                if (!res.ok) throw new Error("高速线中断");
+                let json = await res.json();
+                let data = json.data; 
+
+                if (!data || !data.length) throw new Error("高速线数据为空");
+
+                STATE.history = data.map(i => {
+                    const n = i.opennum.split('+').map(Number);
+                    return { q: i.qihao, n1:n[0], n2:n[1], n3:n[2], sum: parseInt(i.sum) };
+                });
+                APP.render();
+                document.getElementById('timer').innerHTML = `<i class="ph-bold ph-lightning"></i> 链路锁定: 高速`;
+
+            } catch (e1) {
+                // --- 第二步：高速线失败，自动切换备用线 ---
+                console.warn("切线:", e1);
+                logStatus("切换备用加密通道...");
+                
+                try {
+                    let res = await fetch(lines[1].url);
+                    let json = await res.json();
+                    let data = JSON.parse(json.contents).data;
+
+                    if(data && data.length) {
+                        STATE.history = data.map(i => {
+                            const n = i.opennum.split('+').map(Number);
+                            return { q: i.qihao, n1:n[0], n2:n[1], n3:n[2], sum: parseInt(i.sum) };
+                        });
+                        APP.render();
+                        document.getElementById('timer').innerHTML = `<i class="ph-bold ph-shield"></i> 链路锁定: 备用`;
+                    }
+                } catch (e2) {
+                    document.getElementById('timer').innerText = "链路通讯完全中断";
                 }
-            } catch(e) { document.getElementById('timer').innerText = "链路通讯中断"; }
+            }
             APP.startTimer();
         },
         render: () => {
@@ -362,3 +398,4 @@
 </script>
 </body>
 </html>
+
