@@ -8,7 +8,7 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <style>
-        /* 强制加载中文像素字体 */
+        /* ================= 原始内容保持不变 ================= */
         @font-face {
             font-family: 'Zpix';
             src: url('https://cdn.jsdelivr.net/gh/SolidZORO/zpix-pixel-font@master/dist/zpix.woff2') format('woff2');
@@ -112,13 +112,42 @@
 
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--gold); }
+
+        /* ================= 新增：指挥官面板样式 (V11 UI 融合版) ================= */
+        .cmd-panel {
+            border-left: 4px solid var(--green); /* 默认状态颜色 */
+            transition: border-color 0.3s;
+        }
+        .cmd-content { display: flex; flex-direction: column; gap: 6px; }
+        .cmd-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+        .cmd-row.highlight { margin-top: 5px; background: #1a1a1a; padding: 6px; border: 1px solid #333; }
+        
+        .val-md { font-weight: bold; color: var(--white); }
+        .val-num { font-family: 'Silkscreen'; color: var(--dim); }
+        .val-action { font-size: 14px; font-weight: bold; color: var(--blue); text-shadow: 0 0 5px rgba(0,163,255,0.3); }
+        
+        .cmd-note { font-size: 10px; color: #666; font-style: italic; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+        
+        .cmd-divider { height: 1px; background: #222; margin: 4px 0; border-bottom: 1px dashed #333; }
+        
+        /* 状态颜色修饰符 */
+        .status-danger { border-left-color: var(--red) !important; }
+        .status-warn { border-left-color: var(--gold) !important; }
+        .status-safe { border-left-color: var(--green) !important; }
+        
+        .text-danger { color: var(--red) !important; text-shadow: 0 0 5px rgba(255, 62, 62, 0.4); }
+        .text-gold { color: var(--gold) !important; }
+        .text-dim { color: var(--dim) !important; }
+        
+        /* 极差高亮 */
+        .spread-h { color: var(--gold); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="top-nav">
-        <div class="logo"><i class="ph-bold ph-cat"></i> BombCat!!</div>
+        <div class="logo"><i class="ph-bold ph-cat"></i> BOMBCAT!!</div>
         <div id="timer"><i class="ph-bold ph-lightning"></i> 链路连接中...</div>
     </div>
 
@@ -171,6 +200,32 @@
             <div class="weight-box"><span class="wb-name" id="cN2">大双</span><span class="wb-val" id="cV2" style="color:var(--white)">-</span></div>
             <div class="weight-box"><span class="wb-name" id="cN3">小单</span><span class="wb-val" id="cV3" style="color:var(--white)">-</span></div>
             <div class="weight-box"><span class="wb-name" id="cN4">小双</span><span class="wb-val" id="cV4" style="color:var(--red)">-</span></div>
+        </div>
+    </div>
+
+    <div id="commander-console" class="card cmd-panel">
+        <div class="card-label">
+            <span>COMMANDER_V11 // 指挥官系统</span>
+            <span id="cmd-status" style="color: var(--dim); font-weight: bold;">STANDBY</span>
+        </div>
+        <div class="cmd-content">
+            <div class="cmd-row">
+                <span class="label-sm"><i class="ph-bold ph-radar"></i> 态势</span>
+                <span id="cmd-pattern" class="val-md">正在分析...</span>
+            </div>
+            <div class="cmd-row">
+                <span class="label-sm"><i class="ph-bold ph-faders"></i> 极差 [Top | Rank]</span>
+                <span id="cmd-spread" class="val-num">-- | --</span>
+            </div>
+            
+            <div class="cmd-row highlight">
+                <span class="label-sm"><i class="ph-bold ph-sword"></i> 指令</span>
+                <span id="cmd-action" class="val-action">等待数据...</span>
+            </div>
+            
+            <div class="cmd-note">
+                <i class="ph-bold ph-info"></i> <span id="cmd-note">保持冷静，严守纪律</span>
+            </div>
         </div>
     </div>
 
@@ -359,7 +414,11 @@
         calcStats: (list) => {
             const box = document.getElementById('histList');
             box.innerHTML = '';
-            let s = { main:0, def:0, kill:0, bs:0, oe:0, total:0 };
+            let s = { main:0, def:0, kill:0, bs:0, oe:0, total:0, consecutiveMis: 0 }; // Added consecutiveMis
+            
+            // 简单逻辑来计算连续MIS，供指挥官面板使用
+            let misCount = 0;
+
             for(let i=0; i<list.length-2; i++) {
                 const t = list[i]; 
                 const sim = KERNEL.run(list[i+1].n1, list[i+1].n2, list[i+1].n3, list[i+1].sum, list[i+2], list);
@@ -374,15 +433,43 @@
 
                 let tag = isMain ? 'HIT' : (isDef ? 'DEF' : 'MIS');
                 let cls = isMain ? 'tag-hit' : (isDef ? 'tag-def' : 'tag-miss');
+                
+                // 计算最新连黑 (从列表头部开始是最新)
+                if (i === 0) {
+                    if (tag === 'MIS') misCount++;
+                } else if (i === 1 && misCount > 0) {
+                    if (tag === 'MIS') misCount++;
+                }
+
                 box.innerHTML += `<div class="log-row"><div class="log-q">#${t.q.slice(-4)}</div><div style="text-align:center;font-weight:bold">${rStr} [${t.sum}]</div><div class="log-tag ${cls}">${tag}</div></div>`;
             }
+            s.consecutiveMis = misCount; // Store for Commander
+
             const pct = v => Math.round((v/s.total)*100) + "%";
+            const numPct = v => Math.round((v/s.total)*100);
+
             document.getElementById('acc-main').innerText = pct(s.main);
             document.getElementById('acc-def').innerText = pct(s.def);
             document.getElementById('acc-kill').innerText = pct(s.kill);
             document.getElementById('acc-bs').innerText = pct(s.bs);
             document.getElementById('acc-oe').innerText = pct(s.oe);
             document.getElementById('acc-total').innerText = pct(s.main + s.def);
+
+            // ============================================
+            // 🛡️ 指挥官 V11 钩子 (完全无阉割版注入)
+            // ============================================
+            // 需要重新计算当前期的 Res，因为 calcStats 只有历史。
+            // 为了不修改原 render 函数，我们在这里再算一次当前期数据。
+            const cur = list[0];
+            const curRes = KERNEL.run(cur.n1, cur.n2, cur.n3, cur.sum, list[1], list);
+            const statsForCmd = {
+                killRate: numPct(s.kill),
+                mainRate: numPct(s.main),
+                lastMis: s.consecutiveMis,
+                isDive: Math.abs(cur.n1 - cur.n2) > 8
+            };
+            const tops = [curRes.nW.b, curRes.nW.s, curRes.nW.o, curRes.nW.e];
+            runCommanderV11(tops, curRes.nCombos, statsForCmd);
         },
         startTimer: () => {
             if(STATE.timer) clearInterval(STATE.timer);
@@ -395,7 +482,157 @@
         }
     };
     window.onload = APP.init;
+
+    // =================================================================
+    // ⚔️ BOMB CAT V11.0 终极指挥官逻辑引擎 (全量无阉割 / Phosphor UI)
+    // =================================================================
+    function runCommanderV11(tops, ranks, stats) {
+        const elPanel = document.getElementById('commander-console');
+        const elStatus = document.getElementById('cmd-status');
+        const elPattern = document.getElementById('cmd-pattern');
+        const elSpread = document.getElementById('cmd-spread');
+        const elAction = document.getElementById('cmd-action');
+        const elNote = document.getElementById('cmd-note');
+
+        const [big, sml, odd, evn] = tops;
+        const r1 = ranks[0], r2 = ranks[1], r3 = ranks[2], r4 = ranks[3];
+        
+        // 1. 精密极差计算
+        const gapSize = Math.abs(big - sml);
+        const gapOdEv = Math.abs(odd - evn);
+        const maxTopGap = Math.max(gapSize, gapOdEv);
+        
+        const gap12 = r1.score - r2.score;
+        const gap23 = r2.score - r3.score;
+        const gap34 = r3.score - r4.score;
+
+        const killRate = stats.killRate || 100;
+        const mainRate = stats.mainRate || 50;
+        const isConsecutiveLoss = (stats.lastMis || 0) >= 2;
+        const isDive = stats.isDive || false;
+
+        let status = "NORMAL";
+        let statusClass = "status-safe";
+        let patternText = "等待数据...";
+        let actionText = "观望";
+        let noteText = "保持冷静";
+        
+        // --- 逻辑树判定 ---
+
+        // ☠️ 死局熔断
+        if (killRate < 75) {
+            status = "CRASH"; statusClass = "status-danger";
+            patternText = `<i class="ph-bold ph-skull"></i> 系统崩盘 (杀率<75%)`;
+            actionText = `<i class="ph-bold ph-prohibit"></i> 立即空仓 / 崩盘反打`;
+            noteText = "系统反转！若操作，仅限小注买[杀组]。";
+        }
+        else if (isConsecutiveLoss) {
+            status = "HALT"; statusClass = "status-danger";
+            patternText = `<i class="ph-bold ph-chart-line-down"></i> 连黑警告 (2 MIS)`;
+            actionText = `<i class="ph-bold ph-hand-palm"></i> 停手观望`;
+            noteText = "等待出现绿色 HIT 信号后再进场。";
+        }
+        else if (gap34 < -0.2 || r4.score > r3.score) {
+            status = "INVERSE"; statusClass = "status-danger";
+            patternText = `<i class="ph-bold ph-arrows-down-up"></i> 杀组倒挂`;
+            actionText = `<i class="ph-bold ph-prohibit"></i> 空仓避险`;
+            noteText = "最烂的牌都有人买，盘面极度混乱。";
+        }
+        // 🔄 逆势反打
+        else if (mainRate < 20 && killRate > 90) {
+            status = "LAMP"; statusClass = "status-warn";
+            patternText = `<i class="ph-bold ph-lightbulb"></i> 明灯反打信号`;
+            actionText = `<i class="ph-bold ph-shield-check"></i> 弃主保防 (${r2.name}+${r3.name})`;
+            noteText = "主力命中率极低，直接放弃第1名，重注2/3名。";
+        }
+        // 🚀 顺势进攻 (Top Spreads)
+        else if (maxTopGap >= 5.0) {
+            status = "NUCLEAR"; statusClass = "status-safe";
+            const target = gapSize > gapOdEv ? (big>sml?'大':'小') : (odd>evn?'单':'双');
+            patternText = `<i class="ph-bold ph-rocket-launch"></i> 核爆碾压 (Gap ${maxTopGap.toFixed(1)})`;
+            actionText = `<i class="ph-bold ph-fire"></i> 包揽强项 (全包${target})`;
+            noteText = "无需看组合！直接买入所有带该强项的号码。";
+        }
+        // ⚠️ 高速摆动 (单腿)
+        else if (maxTopGap >= 3.0 && gap23 < 0.5) {
+            status = "WOBBLE"; statusClass = "status-warn";
+            patternText = `<i class="ph-bold ph-wave-sine"></i> 高速摆动 (强趋势+弱排位)`;
+            actionText = `<i class="ph-bold ph-arrows-out-line-horizontal"></i> 主力扩编 (1:1:1)`;
+            noteText = `锁强滤弱！买入 [${r1.name}+${r2.name}+${r3.name}] 平注。`;
+        }
+        // ⚔️ 组合排位精细判定
+        else if (Math.abs(gap23) < 0.1 && r2.score > 2.0) {
+            status = "TRAP"; statusClass = "status-danger";
+            patternText = `<i class="ph-bold ph-warning-octagon"></i> 双2.5陷阱`;
+            actionText = `<i class="ph-bold ph-shield-warning"></i> 强制补防 (1:1:1)`;
+            noteText = `警惕诱多！第2、3名同分，必须重防 [${r2.name}/${r3.name}]。`;
+        }
+        else if (gap12 > 3.0) {
+            status = "SOLO"; statusClass = "status-safe";
+            patternText = `<i class="ph-bold ph-sword"></i> 绝杀单点`;
+            actionText = `<i class="ph-bold ph-rocket"></i> 梭哈 [${r1.name}]`;
+            noteText = `第1名遥遥领先，且防守界限清晰(Gap23=${gap23.toFixed(1)})。`;
+        }
+        else if (gap12 < 0.6) {
+            status = "DUAL"; statusClass = "status-warn";
+            patternText = `<i class="ph-bold ph-arrows-split"></i> 双头蛇 (Gap ${gap12.toFixed(1)})`;
+            actionText = `<i class="ph-bold ph-handshake"></i> 平推 [${r1.name} + ${r2.name}]`;
+            noteText = "系统锁定双强，严禁主观二选一，两注必须一样多。";
+        }
+        else if (gap12 >= 0.6 && gap12 <= 1.4) {
+            status = "TANGLE"; statusClass = "status-warn";
+            patternText = `<i class="ph-bold ph-circles-three-plus"></i> 纠结态 (诱多高发)`;
+            actionText = `<i class="ph-bold ph-shield"></i> 重防守 (6:4 或 5:5)`;
+            noteText = `优势不明显，必须加重 [${r2.name}] 的注码防反杀。`;
+        }
+        else {
+            if (gap23 < 0.5) {
+                status = "BLUR";
+                patternText = `<i class="ph-bold ph-cloud-fog"></i> 边界模糊 (需扩防)`;
+                actionText = `<i class="ph-bold ph-shield-plus"></i> 扩编防守 (4:3:3)`;
+                noteText = `第3名 [${r3.name}] 威胁大，必须拉进主力队。`;
+            } else {
+                status = "STAIR";
+                patternText = `<i class="ph-bold ph-steps"></i> 黄金阶梯 (标准)`;
+                actionText = `<i class="ph-bold ph-scales"></i> 73开布局`;
+                noteText = "主力70%吃肉，防守30%喝汤。最稳健模型。";
+            }
+        }
+
+        if (isDive) {
+            patternText += " <span class='text-danger'>+ 跳水</span>";
+            actionText += " (减半)";
+            noteText = "⚠️ 上期号码跨度巨大，本期预测会飘，务必减注！";
+            statusClass = "status-warn";
+        }
+
+        // 渲染
+        elPanel.className = `card cmd-panel ${statusClass}`;
+        document.getElementById('cmd-status').innerText = status;
+        elPattern.innerHTML = patternText;
+        elAction.innerHTML = actionText;
+        elNote.innerHTML = noteText;
+        
+        const hl = (v) => v>=3.0 ? 'spread-h' : '';
+        const hl2 = (v) => v>=1.5 ? 'spread-h' : '';
+        
+        elSpread.innerHTML = `
+            <span class="text-dim">Top:</span> 
+            <span class="${hl(gapSize)}">${gapSize.toFixed(1)}</span> <span class="text-dim">|</span> 
+            <span class="${hl(gapOdEv)}">${gapOdEv.toFixed(1)}</span>
+            <span class="text-dim" style="margin-left:8px">Rank:</span> 
+            <span class="${hl(gap12)}">${gap12.toFixed(1)}</span> <span class="text-dim">|</span> 
+            <span class="${hl2(gap23)}">${gap23.toFixed(1)}</span>
+        `;
+        
+        if (status === "CRASH" || status === "TRAP" || status === "INVERSE") {
+            elAction.classList.add("text-danger");
+            elAction.classList.remove("val-action");
+        } else {
+            elAction.classList.remove("text-danger");
+            elAction.classList.add("val-action");
+        }
+    }
 </script>
 </body>
 </html>
-
