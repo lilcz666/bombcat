@@ -113,13 +113,27 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--gold); }
 
-        /* ================= 新增：指挥官面板样式 (V11 UI 融合版) ================= */
+        /* ================= 指挥官面板样式 (V11.1 修复版) ================= */
         .cmd-panel {
             border-left: 4px solid var(--green); /* 默认状态颜色 */
             transition: border-color 0.3s;
         }
         .cmd-content { display: flex; flex-direction: column; gap: 6px; }
-        .cmd-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+        
+        /* 🟢 修复1：CSS 换行支持 */
+        .cmd-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start;  /* 对齐顶部 */
+            font-size: 12px; 
+            flex-wrap: wrap;          /* 允许换行 */
+            row-gap: 4px;             /* 行间距 */
+        }
+        .cmd-row > span:last-child { 
+            text-align: right; 
+            margin-left: auto;        /* 强制靠右 */
+        }
+
         .cmd-row.highlight { margin-top: 5px; background: #1a1a1a; padding: 6px; border: 1px solid #333; }
         
         .val-md { font-weight: bold; color: var(--white); }
@@ -205,7 +219,7 @@
 
     <div id="commander-console" class="card cmd-panel">
         <div class="card-label">
-            <span>COMMANDER_V11 // 指挥官系统</span>
+            <span>COMMANDER // 指挥面板</span>
             <span id="cmd-status" style="color: var(--dim); font-weight: bold;">STANDBY</span>
         </div>
         <div class="cmd-content">
@@ -495,6 +509,12 @@
         const elNote = document.getElementById('cmd-note');
 
         const [big, sml, odd, evn] = tops;
+
+        // 🟢 修复2：变量名修正 (NAN 根源修复)
+        // 在原代码 KERNEL 中，权重的属性名是 .s，不是 .score。
+        // 这里必须使用 ranks[i].s 才能正确获取数值。
+        // 同时增加安全检查。
+        if(!ranks || ranks.length < 4) return;
         const r1 = ranks[0], r2 = ranks[1], r3 = ranks[2], r4 = ranks[3];
         
         // 1. 精密极差计算
@@ -502,9 +522,10 @@
         const gapOdEv = Math.abs(odd - evn);
         const maxTopGap = Math.max(gapSize, gapOdEv);
         
-        const gap12 = r1.score - r2.score;
-        const gap23 = r2.score - r3.score;
-        const gap34 = r3.score - r4.score;
+        // 核心修复点：使用 .s 而非 .score
+        const gap12 = r1.s - r2.s;
+        const gap23 = r2.s - r3.s;
+        const gap34 = r3.s - r4.s;
 
         const killRate = stats.killRate || 100;
         const mainRate = stats.mainRate || 50;
@@ -532,7 +553,7 @@
             actionText = `<i class="ph-bold ph-hand-palm"></i> 停手观望`;
             noteText = "等待出现绿色 HIT 信号后再进场。";
         }
-        else if (gap34 < -0.2 || r4.score > r3.score) {
+        else if (gap34 < -0.2 || r4.s > r3.s) { // 修复：.s
             status = "INVERSE"; statusClass = "status-danger";
             patternText = `<i class="ph-bold ph-arrows-down-up"></i> 杀组倒挂`;
             actionText = `<i class="ph-bold ph-prohibit"></i> 空仓避险`;
@@ -561,7 +582,7 @@
             noteText = `锁强滤弱！买入 [${r1.name}+${r2.name}+${r3.name}] 平注。`;
         }
         // ⚔️ 组合排位精细判定
-        else if (Math.abs(gap23) < 0.1 && r2.score > 2.0) {
+        else if (Math.abs(gap23) < 0.1 && r2.s > 2.0) { // 修复：.s
             status = "TRAP"; statusClass = "status-danger";
             patternText = `<i class="ph-bold ph-warning-octagon"></i> 双2.5陷阱`;
             actionText = `<i class="ph-bold ph-shield-warning"></i> 强制补防 (1:1:1)`;
