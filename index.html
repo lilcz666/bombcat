@@ -150,6 +150,14 @@
         .text-dim { color: var(--dim) !important; }
         
         .spread-h { color: var(--gold); font-weight: bold; }
+
+        /* 新增输入框样式 */
+        .cmd-inputs { display: flex; gap: 5px; margin-bottom: 8px; border-bottom: 1px solid #222; padding-bottom: 8px; }
+        .cmd-inputs input { 
+            flex: 1; background: #000; border: 1px solid var(--border); 
+            color: var(--gold); font-family: var(--font-pixel); font-size: 10px; 
+            padding: 4px; text-align: center; outline: none;
+        }
     </style>
 </head>
 <body>
@@ -218,6 +226,11 @@
             <span id="cmd-status" style="font-weight: bold; font-family: 'Silkscreen'; font-size: 9px;">--</span>
         </div>
         <div class="cmd-content">
+            <div class="cmd-inputs">
+                <input id="set-cap" type="number" placeholder="本金" value="1000">
+                <input id="set-tp" type="number" placeholder="止盈" value="200">
+                <input id="set-sl" type="number" placeholder="止损" value="150">
+            </div>
             <div class="cmd-row">
                 <span class="label-sm"><i class="ph-bold ph-radar"></i> 态势</span>
                 <span id="cmd-pattern" class="val-md">正在同步...</span>
@@ -462,13 +475,16 @@
     window.onload = APP.init;
 
     // =================================================================
-    // ⚔️ APEX 补丁：极致注码 + 盈亏监控 + 止盈止损报警
+    // ⚔️ APEX 补丁：极致注码 + 盈亏监控 + 止盈止损报警 (元单位定制版)
     // =================================================================
     if (!window._APEX_SYS_) {
         window._APEX_SYS_ = { 
             lastGapBS: 0, lastGapOE: 0, lastR1: 0,
-            sessionPnL: 0, lastQihao: null, lastBetUnit: 0, lastTarget: null,
-            limitTP: 50, limitSL: -30 
+            sessionPnL: 0, lastQihao: null, 
+            lastB1: 0, lastT1: null,
+            lastB2: 0, lastT2: null,
+            lastB3: 0, lastT3: null,
+            lastTarget: null
         };
     }
 
@@ -481,16 +497,35 @@
         const elAction = document.getElementById('cmd-action');
         const elNote = document.getElementById('cmd-note');
 
+        // 获取用户自定义标准
+        const userCap = parseFloat(document.getElementById('set-cap').value) || 1000;
+        const userTP = parseFloat(document.getElementById('set-tp').value) || 200;
+        const userSL = -Math.abs(parseFloat(document.getElementById('set-sl').value) || 150);
+
         const [big, sml, odd, evn] = tops;
         if(!ranks || ranks.length < 4) return;
         const r1 = ranks[0], r2 = ranks[1], r3 = ranks[2], r4 = ranks[3];
         
-        // 1. PnL 结算
+        // 1. PnL 结算 (支持三位独立结算)
         if (STATE.history.length > 0) {
             const latest = STATE.history[0];
             if (ax.lastQihao && latest.q !== ax.lastQihao && ax.lastTarget) {
                 const resStr = (latest.sum >= 14 ? '大' : '小') + (latest.sum % 2 !== 0 ? '单' : '双');
-                if (ax.lastTarget.includes(resStr)) ax.sessionPnL += ax.lastBetUnit * 0.95; else ax.sessionPnL -= ax.lastBetUnit;
+                
+                const calc = (target, bet) => {
+                    if (!target || bet <= 0) return 0;
+                    if (target === resStr) {
+                        // 大双小单 4.65倍, 大单小双 4.25倍
+                        const odds = (resStr === "大双" || resStr === "小单") ? 4.65 : 4.25;
+                        return bet * (odds - 1); 
+                    }
+                    return -bet;
+                };
+
+                const p1 = calc(ax.lastT1, ax.lastB1);
+                const p2 = calc(ax.lastT2, ax.lastB2);
+                const p3 = calc(ax.lastT3, ax.lastB3);
+                ax.sessionPnL += (p1 + p2 + p3);
             }
             ax.lastQihao = latest.q;
         }
@@ -507,80 +542,92 @@
         const isApexOpportunity = r1.s > 4.2 || (resonance && r1.s > 3.8);
 
         // 3. 报警状态检查
-        const isTP = ax.sessionPnL >= ax.limitTP;
-        const isSL = ax.sessionPnL <= ax.limitSL;
+        const isTP = ax.sessionPnL >= userTP;
+        const isSL = ax.sessionPnL <= userSL;
 
-        let statusText = "NORMAL", statusClass = "status-safe", patternText = "扫描中...", actionText = "等待", noteText = "...", currentUnit = 0;
+        // 量化动态计算 (基于本金)
+        const unitHeavy = Math.round(userCap * 0.05); 
+        const unitMain = Math.round(userCap * 0.035); 
+        const unitDef = Math.round(userCap * 0.015);  
+        const unitFlat = Math.round(userCap * 0.01);   
+
+        let statusText = "NORMAL", statusClass = "status-safe", patternText = "扫描中...", actionText = "等待", noteText = "...", currentTotal = 0;
+
+        // 重置当期记录
+        ax.lastB1 = 0; ax.lastT1 = null; ax.lastB2 = 0; ax.lastT2 = null; ax.lastB3 = 0; ax.lastT3 = null;
 
         if (isTP) {
             statusText = "TP_ALARM"; statusClass = "status-safe";
             patternText = `<i class="ph-bold ph-trophy" style="color:var(--gold)"></i> 止盈达成 (Profit!)`;
-            actionText = `<i class="ph-bold ph-check-circle"></i> 强制收工 / 今日盈余: ${ax.sessionPnL.toFixed(1)}U`;
-            noteText = "已达设定的 50U 止盈目标。请立刻锁定利润下桌休息！";
+            actionText = `<i class="ph-bold ph-check-circle"></i> 强制收工 / 盈余: ${ax.sessionPnL.toFixed(1)}元`;
+            noteText = `已达设定的 ${userTP}元 止盈目标。请立刻锁定利润下桌休息！`;
+            ax.lastTarget = null;
         } 
         else if (isSL) {
             statusText = "SL_ALARM"; statusClass = "status-danger";
             patternText = `<i class="ph-bold ph-skull" style="color:var(--red)"></i> 止损熔断 (Alert!)`;
-            actionText = `<i class="ph-bold ph-prohibit"></i> 熔断离场 / 累计亏损: ${ax.sessionPnL.toFixed(1)}U`;
-            noteText = "触碰 -30U 止损红线。环境极端，请强制停手冷静。";
+            actionText = `<i class="ph-bold ph-prohibit"></i> 熔断离场 / 亏损: ${ax.sessionPnL.toFixed(1)}元`;
+            noteText = `触碰 ${userSL}元 止损红线。环境极端，请强制停手冷静。`;
+            ax.lastTarget = null;
         }
         else if (entropy < 1.0 && !isApexOpportunity) {
             statusText = "CHAOS"; statusClass = "status-danger";
             patternText = `<i class="ph-bold ph-warning"></i> 混沌乱流 (噪音区)`;
-            actionText = `<i class="ph-bold ph-hand-palm"></i> 0 Unit (离散观望)`;
+            actionText = `<i class="ph-bold ph-hand-palm"></i> 0 元 (离散观望)`;
             noteText = "权重纠缠，能量对冲。此时介入胜率极低，强制空仓。";
             ax.lastTarget = null;
         }
         else if (isApexOpportunity) {
             statusText = "APEX_RECOVERY"; statusClass = "status-safe";
             patternText = `<i class="ph-bold ph-target"></i> 绝杀回归 (重锤位)`;
-            actionText = `<i class="ph-bold ph-fire"></i> [${r1.name}] 重注 10U`;
+            actionText = `<i class="ph-bold ph-fire"></i> [${r1.name}] 重注 ${unitHeavy}元`;
             noteText = "巅峰权重回补逻辑。爆点已至，严禁漏单！";
-            currentUnit = 10; ax.lastTarget = r1.name;
+            ax.lastB1 = unitHeavy; ax.lastT1 = r1.name; ax.lastTarget = r1.name; currentTotal = unitHeavy;
         }
         else if (resonance) {
             statusText = "NUCLEAR"; statusClass = "status-safe";
-            patternText = `<i class="ph-bold ph-unite"></i> 核爆共振 (强号)`;
-            actionText = `<i class="ph-bold ph-sword"></i> 主${r1.name} 7U | 防${r2.name} 3U`;
-            noteText = "大小单双完全对齐。建议 7:3 分仓，总计 10U。";
-            currentUnit = 10; ax.lastTarget = r1.name + r2.name;
+            patternText = `<i class="ph-bold ph-unite"></i> 核爆共振 (三路合围)`;
+            actionText = `<i class="ph-bold ph-sword"></i> 主${r1.name}/${r2.name} 各${unitMain}元 | 防${r3.name} ${unitDef}元`;
+            noteText = "高确信共振。采用三路合围策略，主攻双开对冲。";
+            ax.lastB1 = unitMain; ax.lastT1 = r1.name; ax.lastB2 = unitMain; ax.lastT2 = r2.name; ax.lastB3 = unitDef; ax.lastT3 = r3.name;
+            ax.lastTarget = r1.name + r2.name + r3.name; currentTotal = (unitMain * 2) + unitDef;
         }
         else if (isConsecutiveLoss) {
              statusText = "HALT"; statusClass = "status-danger";
              patternText = `<i class="ph-bold ph-hand-palm"></i> 连黑熔断`;
-             actionText = `<i class="ph-bold ph-stop"></i> 0 Unit (强制避风)`;
+             actionText = `<i class="ph-bold ph-stop"></i> 0 元 (强制避风)`;
              noteText = "能量不足且连黑。请务必等绿色 HIT 信号后再进场。";
              ax.lastTarget = null;
         }
         else {
             if (r1.s - r2.s > 1.5) {
-                statusText = "SOLO"; patternText = `<i class="ph-bold ph-gps"></i> 坐标锁定 (强排位)`;
-                actionText = `<i class="ph-bold ph-crosshair"></i> [${r1.name}] 5U / [${r2.name}] 1U`;
-                currentUnit = 6; ax.lastTarget = r1.name + r2.name;
-                noteText = "排位清晰。主攻 5U，防守 1U 对冲。";
+                statusText = "SOLO"; patternText = `<i class="ph-bold ph-gps"></i> 坐标锁定 (双路)`;
+                actionText = `<i class="ph-bold ph-crosshair"></i> [${r1.name}] ${unitMain}元 / [${r2.name}] ${unitDef}元`;
+                ax.lastB1 = unitMain; ax.lastT1 = r1.name; ax.lastB2 = unitDef; ax.lastT2 = r2.name;
+                ax.lastTarget = r1.name + r2.name; currentTotal = unitMain + unitDef;
+                noteText = "排位清晰。主攻防守结合。";
             } else {
                 statusText = "DUAL"; patternText = `<i class="ph-bold ph-git-diff"></i> 双头蛇 (对峙)`;
-                actionText = `<i class="ph-bold ph-scales"></i> 平推 [${r1.name} 2U + ${r2.name} 2U]`;
-                currentUnit = 4; ax.lastTarget = r1.name + r2.name;
+                actionText = `<i class="ph-bold ph-scales"></i> 平推 [${r1.name} ${unitFlat}元 + ${r2.name} ${unitFlat}元]`;
+                ax.lastB1 = unitFlat; ax.lastT1 = r1.name; ax.lastB2 = unitFlat; ax.lastT2 = r2.name;
+                ax.lastTarget = r1.name + r2.name; currentTotal = unitFlat * 2;
                 noteText = "两强对垒。建议等额投注，不可博单边。";
             }
         }
 
-        if (isDive && currentUnit > 0) {
+        if (isDive && currentTotal > 0) {
             patternText += " <span class='text-danger'>(跳水)</span>";
-            currentUnit = Math.max(1, Math.round(currentUnit / 2));
-            actionText = actionText.replace(/\d+U/g, currentUnit + "U");
+            ax.lastB1 = Math.max(1, Math.round(ax.lastB1 / 2));
+            ax.lastB2 = Math.max(0, Math.round(ax.lastB2 / 2));
+            ax.lastB3 = Math.max(0, Math.round(ax.lastB3 / 2));
+            actionText = actionText.replace(/\d+元/g, (v) => Math.round(parseInt(v)/2) + "元");
             noteText = "⚠️ 警惕上期号码极值偏离，注码自动减半规避。";
         }
 
         // 4. 执行渲染
-        ax.lastBetUnit = currentUnit;
         elPanel.className = `card cmd-panel ${statusClass}`;
-        
-        // 🟢 解决排版挤压：PnL 显示在状态栏，并增加 TP/SL 目标提示
         const pnlCls = ax.sessionPnL >= 0 ? 'text-gold' : 'text-danger';
-        elStatus.innerHTML = `${statusText} <span class="${pnlCls}">[PnL: ${ax.sessionPnL.toFixed(1)}U]</span> <span style="color:var(--dim)">[+50/-30]</span>`;
-        
+        elStatus.innerHTML = `${statusText} <span class="${pnlCls}">[PnL: ${ax.sessionPnL.toFixed(1)}元]</span> <span style="color:var(--dim)">[目标:${userTP}/${userSL}]</span>`;
         elPattern.innerHTML = patternText;
         elAction.innerHTML = actionText;
         elNote.innerHTML = noteText;
