@@ -8,7 +8,7 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <style>
-        /* ================= 源代码样式：100% 完整保留，绝不改动 ================= */
+        /* ================= 源代码样式：100% 完整保留 ================= */
         @font-face {
             font-family: 'Zpix';
             src: url('https://cdn.jsdelivr.net/gh/SolidZORO/zpix-pixel-font@master/dist/zpix.woff2') format('woff2');
@@ -113,7 +113,7 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--gold); }
 
-        /* ================= 指挥官面板专用样式 ================= */
+        /* ================= 指挥官面板定制逻辑 ================= */
         .cmd-panel {
             border-left: 4px solid var(--green);
             transition: border-color 0.3s;
@@ -151,12 +151,12 @@
         
         .spread-h { color: var(--gold); font-weight: bold; }
 
-        /* 修复排版挤压 */
-        .cmd-inputs { display: flex; gap: 5px; margin-bottom: 4px; }
-        .cmd-inputs input { 
+        /* 输入框防重叠修正 */
+        .cmd-inputs-row { display: flex; gap: 4px; margin-bottom: 2px; }
+        .cmd-inputs-row input { 
             flex: 1; background: #000; border: 1px solid var(--border); 
             color: var(--gold); font-family: var(--font-pixel); font-size: 10px; 
-            padding: 3px; text-align: center; outline: none;
+            padding: 4px; text-align: center; outline: none;
         }
     </style>
 </head>
@@ -226,7 +226,7 @@
             <span id="cmd-status" style="font-weight: bold; font-family: 'Silkscreen'; font-size: 9px;">--</span>
         </div>
         <div class="cmd-content">
-            <div class="cmd-inputs">
+            <div class="cmd-inputs-row">
                 <input id="set-cap" type="number" placeholder="本金" value="1000">
                 <input id="set-tp" type="number" placeholder="止盈" value="200">
                 <input id="set-sl" type="number" placeholder="止损" value="150">
@@ -267,7 +267,6 @@
 </div>
 
 <script>
-    // ================= 核心 KERNEL：100% 原始代码，绝不精简 =================
     const CONFIG = {
         API: "https://pc28.help/kj.json?limit=20",
         REFRESH: 25,
@@ -475,15 +474,12 @@
     window.onload = APP.init;
 
     // =================================================================
-    // ⚔️ APEX 补丁：极致注码 + 盈亏监控 + 止盈止损报警 (元单位定制版)
+    // ⚔️ APEX 补丁：极致注码 + 盈亏监控 (元单位三路合围版)
     // =================================================================
     if (!window._APEX_SYS_) {
         window._APEX_SYS_ = { 
-            lastGapBS: 0, 
-            lastGapOE: 0, 
-            lastR1: 0,
-            sessionPnL: 0, 
-            lastQihao: null, 
+            lastGapBS: 0, lastGapOE: 0, lastR1: 0,
+            sessionPnL: 0, lastQihao: null, 
             lastB1: 0, lastT1: null,
             lastB2: 0, lastT2: null,
             lastB3: 0, lastT3: null,
@@ -500,7 +496,6 @@
         const elAction = document.getElementById('cmd-action');
         const elNote = document.getElementById('cmd-note');
 
-        // 获取用户自定义标准
         const userCap = parseFloat(document.getElementById('set-cap').value) || 1000;
         const userTP = parseFloat(document.getElementById('set-tp').value) || 200;
         const userSL = -Math.abs(parseFloat(document.getElementById('set-sl').value) || 150);
@@ -509,140 +504,91 @@
         if(!ranks || ranks.length < 4) return;
         const r1 = ranks[0], r2 = ranks[1], r3 = ranks[2], r4 = ranks[3];
         
-        // 1. PnL 结算 (支持三位独立结算纯利润)
+        // 1. PnL 精确分路结算
         if (STATE.history.length > 0) {
             const latest = STATE.history[0];
             if (ax.lastQihao && latest.q !== ax.lastQihao && ax.lastTarget) {
                 const resStr = (latest.sum >= 14 ? '大' : '小') + (latest.sum % 2 !== 0 ? '单' : '双');
-                
                 const calc = (target, bet) => {
                     if (!target || bet <= 0) return 0;
                     if (target === resStr) {
-                        // 大双小单 4.65倍, 大单小双 4.25倍
                         const odds = (resStr === "大双" || resStr === "小单") ? 4.65 : 4.25;
-                        return bet * (odds - 1); 
+                        return bet * (odds - 1); // 纯利
                     }
                     return -bet;
                 };
-
-                const p1 = calc(ax.lastT1, ax.lastB1);
-                const p2 = calc(ax.lastT2, ax.lastB2);
-                const p3 = calc(ax.lastT3, ax.lastB3);
-                ax.sessionPnL += (p1 + p2 + p3);
+                ax.sessionPnL += (calc(ax.lastT1, ax.lastB1) + calc(ax.lastT2, ax.lastB2) + calc(ax.lastT3, ax.lastB3));
             }
             ax.lastQihao = latest.q;
         }
 
-        // 2. 核心状态计算
         const gapBS = Math.abs(big - sml);
         const gapOE = Math.abs(odd - evn);
-        const slopeBS = gapBS - ax.lastGapBS; 
-        const slopeOE = gapOE - ax.lastGapOE;
         const resonance = (gapBS > 1.8 && gapOE > 1.8); 
-        const entropy = r1.s - r4.s; 
         const isConsecutiveLoss = (stats.lastMis || 0) >= 2;
         const isDive = stats.isDive || false;
         const isApexOpportunity = r1.s > 4.2 || (resonance && r1.s > 3.8);
 
-        // 3. 报警状态检查
         const isTP = ax.sessionPnL >= userTP;
         const isSL = ax.sessionPnL <= userSL;
 
-        // 量化动态计算 (基于本金)
         const unitHeavy = Math.round(userCap * 0.05); 
         const unitMain = Math.round(userCap * 0.035); 
         const unitDef = Math.round(userCap * 0.015);  
         const unitFlat = Math.round(userCap * 0.01);   
 
-        let statusText = "NORMAL", statusClass = "status-safe", patternText = "扫描中...", actionText = "等待", noteText = "...", currentTotal = 0;
-
-        // 重置当期记录
+        let statusText = "NORMAL", statusClass = "status-safe", pText = "扫描中...", aText = "等待", nText = "...";
         ax.lastB1 = 0; ax.lastT1 = null; ax.lastB2 = 0; ax.lastT2 = null; ax.lastB3 = 0; ax.lastT3 = null;
 
         if (isTP) {
             statusText = "TP_ALARM"; statusClass = "status-safe";
-            patternText = `<i class="ph-bold ph-trophy" style="color:var(--gold)"></i> 止盈达成 (Profit!)`;
-            actionText = `<i class="ph-bold ph-check-circle"></i> 强制收工 / 盈余: ${ax.sessionPnL.toFixed(1)}元`;
-            noteText = `已达设定的 ${userTP}元 止盈目标。请立刻锁定利润下桌休息！`;
-            ax.lastTarget = null;
+            pText = `止盈达成 (Profit!)`; aText = `强制收工 / 盈余: ${ax.sessionPnL.toFixed(1)}元`; nText = `已锁定利润。`;
         } 
         else if (isSL) {
             statusText = "SL_ALARM"; statusClass = "status-danger";
-            patternText = `<i class="ph-bold ph-skull" style="color:var(--red)"></i> 止损熔断 (Alert!)`;
-            actionText = `<i class="ph-bold ph-prohibit"></i> 熔断离场 / 亏损: ${ax.sessionPnL.toFixed(1)}元`;
-            noteText = `触碰 ${userSL}元 止损红线。环境极端，请强制停手冷静。`;
-            ax.lastTarget = null;
-        }
-        else if (entropy < 1.0 && !isApexOpportunity) {
-            statusText = "CHAOS"; statusClass = "status-danger";
-            patternText = `<i class="ph-bold ph-warning"></i> 混沌乱流 (噪音区)`;
-            actionText = `<i class="ph-bold ph-hand-palm"></i> 0 元 (离散观望)`;
-            noteText = "权重纠缠，能量对冲。此时介入胜率极低，强制空仓。";
-            ax.lastTarget = null;
+            pText = `止损熔断 (Alert!)`; aText = `熔断离场 / 亏损: ${ax.sessionPnL.toFixed(1)}元`; nText = `触发熔断红线。`;
         }
         else if (isApexOpportunity) {
             statusText = "APEX_RECOVERY"; statusClass = "status-safe";
-            patternText = `<i class="ph-bold ph-target"></i> 绝杀回归 (重锤位)`;
-            actionText = `<i class="ph-bold ph-fire"></i> [${r1.name}] 重注 ${unitHeavy}元`;
-            noteText = "巅峰权重回补逻辑。爆点已至，严禁漏单！";
-            ax.lastB1 = unitHeavy; ax.lastT1 = r1.name; ax.lastTarget = r1.name; currentTotal = unitHeavy;
+            pText = `绝杀回归 (重锤位)`; aText = `[${r1.name}] 重注 ${unitHeavy}元`;
+            ax.lastB1 = unitHeavy; ax.lastT1 = r1.name; ax.lastTarget = r1.name; nText = "巅峰权重回补逻辑。";
         }
         else if (resonance) {
             statusText = "NUCLEAR"; statusClass = "status-safe";
-            patternText = `<i class="ph-bold ph-unite"></i> 核爆共振 (三路合围)`;
-            actionText = `<i class="ph-bold ph-sword"></i> 主${r1.name}/${r2.name} 各${unitMain}元 | 防${r3.name} ${unitDef}元`;
-            noteText = "高确信共振。采用三路合围策略，总计 " + ((unitMain*2)+unitDef) + "元。";
+            pText = `核爆共振 (三路合围)`;
+            aText = `主${r1.name}/${r2.name} 各${unitMain}元 | 防${r3.name} ${unitDef}元`;
             ax.lastB1 = unitMain; ax.lastT1 = r1.name; ax.lastB2 = unitMain; ax.lastT2 = r2.name; ax.lastB3 = unitDef; ax.lastT3 = r3.name;
-            ax.lastTarget = r1.name + r2.name + r3.name; currentTotal = (unitMain * 2) + unitDef;
+            ax.lastTarget = r1.name + r2.name + r3.name; nText = "高确信共振合围。";
         }
         else if (isConsecutiveLoss) {
              statusText = "HALT"; statusClass = "status-danger";
-             patternText = `<i class="ph-bold ph-hand-palm"></i> 连黑熔断`;
-             actionText = `<i class="ph-bold ph-stop"></i> 0 元 (强制避风)`;
-             noteText = "能量不足且连黑。请务必等绿色 HIT 信号后再进场。";
-             ax.lastTarget = null;
+             pText = `连黑熔断`; aText = `0 元 (强制避风)`; ax.lastTarget = null;
         }
         else {
             if (r1.s - r2.s > 1.5) {
-                statusText = "SOLO"; patternText = `<i class="ph-bold ph-gps"></i> 坐标锁定 (双路)`;
-                actionText = `<i class="ph-bold ph-crosshair"></i> [${r1.name}] ${unitMain}元 / [${r2.name}] ${unitDef}元`;
+                statusText = "SOLO"; pText = `坐标锁定 (双路)`;
+                aText = `[${r1.name}] ${unitMain}元 / [${r2.name}] ${unitDef}元`;
                 ax.lastB1 = unitMain; ax.lastT1 = r1.name; ax.lastB2 = unitDef; ax.lastT2 = r2.name;
-                ax.lastTarget = r1.name + r2.name; currentTotal = unitMain + unitDef;
-                noteText = "排位清晰。主攻防守结合。";
+                ax.lastTarget = r1.name + r2.name; nText = "排位清晰。";
             } else {
-                statusText = "DUAL"; patternText = `<i class="ph-bold ph-git-diff"></i> 双头蛇 (对峙)`;
-                actionText = `<i class="ph-bold ph-scales"></i> 平推 [${r1.name} ${unitFlat}元 + ${r2.name} ${unitFlat}元]`;
+                statusText = "DUAL"; pText = `双头蛇 (对峙)`;
+                aText = `平推 [${r1.name} ${unitFlat}元 + ${r2.name} ${unitFlat}元]`;
                 ax.lastB1 = unitFlat; ax.lastT1 = r1.name; ax.lastB2 = unitFlat; ax.lastT2 = r2.name;
-                ax.lastTarget = r1.name + r2.name; currentTotal = unitFlat * 2;
-                noteText = "两强对垒。建议等额投注，不可博单边。";
+                ax.lastTarget = r1.name + r2.name; nText = "等额投注，不可博边。";
             }
         }
 
-        if (isDive && currentTotal > 0) {
-            patternText += " <span class='text-danger'>(跳水)</span>";
-            ax.lastB1 = Math.max(1, Math.round(ax.lastB1 / 2));
-            ax.lastB2 = Math.max(0, Math.round(ax.lastB2 / 2));
-            ax.lastB3 = Math.max(0, Math.round(ax.lastB3 / 2));
-            actionText = actionText.replace(/\d+元/g, (v) => Math.round(parseInt(v)/2) + "元");
-            noteText = "⚠️ 警惕上期号码极值偏离，注码自动减半规避。";
+        if (isDive && (ax.lastB1 > 0)) {
+            ax.lastB1 = Math.round(ax.lastB1/2); ax.lastB2 = Math.round(ax.lastB2/2); ax.lastB3 = Math.round(ax.lastB3/2);
+            aText = aText.replace(/\d+元/g, (v) => Math.round(parseInt(v)/2) + "元");
         }
 
-        // 4. 执行渲染
         elPanel.className = `card cmd-panel ${statusClass}`;
         const pnlCls = ax.sessionPnL >= 0 ? 'text-gold' : 'text-danger';
         elStatus.innerHTML = `${statusText} <span class="${pnlCls}">[PnL: ${ax.sessionPnL.toFixed(1)}元]</span> <span style="color:var(--dim)">[目标:${userTP}/${userSL}]</span>`;
-        elPattern.innerHTML = patternText;
-        elAction.innerHTML = actionText;
-        elNote.innerHTML = noteText;
-        
-        const getSym = (s) => s > 0.2 ? '▲' : (s < -0.2 ? '▼' : '-');
-        elSpread.innerHTML = `
-            <span class="text-dim">BS:</span> <span class="${gapBS >= 2.5 ? 'spread-h' : ''}">${gapBS.toFixed(1)}${getSym(slopeBS)}</span> | 
-            <span class="text-dim">OE:</span> <span class="${gapOE >= 2.5 ? 'spread-h' : ''}">${gapOE.toFixed(1)}${getSym(slopeOE)}</span> | 
-            <span class="text-dim">R12:</span> <span class="${(r1.s-r2.s) >= 1.5 ? 'spread-h' : ''}">${(r1.s-r2.s).toFixed(1)}</span>
-        `;
-        
-        ax.lastGapBS = gapBS; ax.lastGapOE = gapOE; ax.lastR1 = r1.s;
+        elPattern.innerHTML = pText; elAction.innerHTML = aText; elNote.innerHTML = nText;
+        elSpread.innerHTML = `BS: ${gapBS.toFixed(1)} | OE: ${gapOE.toFixed(1)} | R12: ${(r1.s-r2.s).toFixed(1)}`;
+        ax.lastGapBS = gapBS; ax.lastGapOE = gapOE;
     }
 </script>
 </body>
