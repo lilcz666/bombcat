@@ -8,22 +8,22 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <style>
-        /* ================= 源代码样式：完全保留，不准动 ================= */
+        /* ================= 原始内容保持不变 ================= */
         @font-face {
             font-family: 'Zpix';
             src: url('https://cdn.jsdelivr.net/gh/SolidZORO/zpix-pixel-font@master/dist/zpix.woff2') format('woff2');
         }
 
         :root {
-            --bg: #0A0A0A;          
-            --panel: #161616;       
-            --border: #2A2A2A;      
-            --gold: #FFD700;        
-            --green: #00FF88;       
-            --white: #F5EEDC;       
-            --red: #FF3E3E;         
-            --blue: #00A3FF;        
-            --dim: #555555;         
+            --bg: #0A0A0A;          /* 卫衣极黑 */
+            --panel: #161616;       /* 面板碳灰 */
+            --border: #2A2A2A;      /* 边框 */
+            --gold: #FFD700;        /* 亮金（帽子/期号） */
+            --green: #00FF88;       /* 翠绿（盈利/状态） */
+            --white: #F5EEDC;       /* 奶白（主文字） */
+            --red: #FF3E3E;         /* 警示红 */
+            --blue: #00A3FF;        /* 科技蓝 */
+            --dim: #555555;         /* 暗灰 */
             --font-pixel: 'Zpix', 'Silkscreen', sans-serif;
         }
 
@@ -40,6 +40,7 @@
 
         .container { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
 
+        /* 顶部导航 */
         .top-nav {
             width: 100%; display: flex; justify-content: space-between; align-items: center;
             padding: 12px 5px; border-bottom: 2px solid var(--gold);
@@ -47,6 +48,7 @@
         .logo { font-size: 1.2rem; color: var(--gold); font-weight: bold; }
         #timer { font-size: 11px; color: var(--green); }
 
+        /* 高级像素卡片 */
         .card {
             background: var(--panel);
             border: 1px solid var(--border);
@@ -61,6 +63,7 @@
             border-bottom: 1px solid #222; padding-bottom: 6px;
         }
 
+        /* 核心预测区域 */
         .predict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .box {
             border: 1px solid var(--border); padding: 14px 5px;
@@ -71,6 +74,7 @@
         .label-sm { font-size: 10px; color: var(--dim); margin-bottom: 5px; display: block; }
         .val-lg { font-size: 1.6rem; font-weight: bold; letter-spacing: -1px; }
 
+        /* 能量矩阵 */
         .energy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .energy-head { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
         .pixel-bar { height: 10px; display: flex; gap: 2px; background: #000; padding: 1px; }
@@ -78,11 +82,13 @@
         .active-gold { background: var(--gold); box-shadow: 0 0 10px rgba(255,215,0,0.3); }
         .active-green { background: var(--green); }
 
+        /* 组合权重细则 (功能保留) */
         .weight-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 15px; }
         .weight-box { background: #111; border: 1px solid var(--border); padding: 8px 0; text-align: center; }
         .wb-name { font-size: 9px; color: var(--dim); display: block; margin-bottom: 2px; }
         .wb-val { font-size: 11px; font-weight: bold; }
 
+        /* 历史日志 */
         .log-list { display: flex; flex-direction: column; gap: 1px; max-height: 250px; overflow-y: auto; background: #000; border: 1px solid var(--border); }
         .log-row {
             display: grid; grid-template-columns: 80px 1fr 60px;
@@ -95,6 +101,7 @@
         .tag-def { color: var(--gold); border-color: var(--gold); }
         .tag-miss { color: var(--red); border-color: var(--red); }
 
+        /* 六维统计方块 (功能保留) */
         .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .stat-box { 
             background: var(--panel); border: 1px solid var(--border); 
@@ -106,23 +113,25 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--gold); }
 
+        /* ================= 指挥官面板样式 (V11.1 修复版) ================= */
         .cmd-panel {
-            border-left: 4px solid var(--green); 
+            border-left: 4px solid var(--green); /* 默认状态颜色 */
             transition: border-color 0.3s;
         }
         .cmd-content { display: flex; flex-direction: column; gap: 6px; }
         
+        /* 🟢 修复1：CSS 换行支持 */
         .cmd-row { 
             display: flex; 
             justify-content: space-between; 
-            align-items: flex-start;  
+            align-items: flex-start;  /* 对齐顶部 */
             font-size: 12px; 
-            flex-wrap: wrap;          
-            row-gap: 4px;             
+            flex-wrap: wrap;          /* 允许换行 */
+            row-gap: 4px;             /* 行间距 */
         }
         .cmd-row > span:last-child { 
             text-align: right; 
-            margin-left: auto;        
+            margin-left: auto;        /* 强制靠右 */
         }
 
         .cmd-row.highlight { margin-top: 5px; background: #1a1a1a; padding: 6px; border: 1px solid #333; }
@@ -135,6 +144,7 @@
         
         .cmd-divider { height: 1px; background: #222; margin: 4px 0; border-bottom: 1px dashed #333; }
         
+        /* 状态颜色修饰符 */
         .status-danger { border-left-color: var(--red) !important; }
         .status-warn { border-left-color: var(--gold) !important; }
         .status-safe { border-left-color: var(--green) !important; }
@@ -143,6 +153,7 @@
         .text-gold { color: var(--gold) !important; }
         .text-dim { color: var(--dim) !important; }
         
+        /* 极差高亮 */
         .spread-h { color: var(--gold); font-weight: bold; }
     </style>
 </head>
@@ -222,7 +233,7 @@
             </div>
             
             <div class="cmd-row highlight">
-                <span class="label-sm"><i class="ph-bold ph-sword"></i> 指令</span>
+                <span class="label-sm"><i class="ph-bold ph-sword"></i> 指令 [量化注码]</span>
                 <span id="cmd-action" class="val-action">等待数据...</span>
             </div>
             
@@ -440,16 +451,20 @@
     window.onload = APP.init;
 
     // =================================================================
-    // ⚔️ BOMB CAT APEX FINAL COMMANDER (极致升级补丁替换区)
+    // ⚔️ BOMB CAT APEX QUANT & ALARM (极致升级补丁替换区)
     // =================================================================
     
-    // 终极内存：不破坏 STATE 结构，单独存放趋势数据
-    if (!window._APEX_MEM_) {
-        window._APEX_MEM_ = { lastGapBS: 0, lastGapOE: 0, lastR1: 0 };
+    // 终极会话内存 (包含 PnL 追踪与 TP/SL 逻辑)
+    if (!window._APEX_SESSION_) {
+        window._APEX_SESSION_ = { 
+            lastGapBS: 0, lastGapOE: 0, lastR1: 0,
+            sessionPnL: 0, lastQihao: null, lastBetUnit: 0, lastTarget: null,
+            limitTP: 50,  limitSL: -30 
+        };
     }
 
     function runCommanderV11(tops, ranks, stats) {
-        const mem = window._APEX_MEM_;
+        const sm = window._APEX_SESSION_;
         const elPanel = document.getElementById('commander-console');
         const elStatus = document.getElementById('cmd-status');
         const elPattern = document.getElementById('cmd-pattern');
@@ -461,110 +476,128 @@
         if(!ranks || ranks.length < 4) return;
         const r1 = ranks[0], r2 = ranks[1], r3 = ranks[2], r4 = ranks[3];
         
-        // 1. 极致维度计算：极差、斜率、共振与离散度
+        // 1. 自动结算逻辑 (基于历史快照)
+        if (STATE.history.length > 0) {
+            const latest = STATE.history[0];
+            if (sm.lastQihao && latest.q !== sm.lastQihao && sm.lastTarget) {
+                const resStr = (latest.sum >= 14 ? '大' : '小') + (latest.sum % 2 !== 0 ? '单' : '双');
+                if (sm.lastTarget.includes(resStr)) sm.sessionPnL += sm.lastBetUnit * 0.95; else sm.sessionPnL -= sm.lastBetUnit;
+            }
+            sm.lastQihao = latest.q;
+        }
+
+        // 2. 极致维度计算
         const gapBS = Math.abs(big - sml);
         const gapOE = Math.abs(odd - evn);
-        const slopeBS = gapBS - mem.lastGapBS; 
-        const slopeOE = gapOE - mem.lastGapOE;
+        const slopeBS = gapBS - sm.lastGapBS; 
+        const slopeOE = gapOE - sm.lastGapOE;
         const resonance = (gapBS > 1.8 && gapOE > 1.8); 
         const entropy = r1.s - r4.s; 
         
-        const killRate = stats.killRate || 100;
         const mainRate = stats.mainRate || 50;
         const isConsecutiveLoss = (stats.lastMis || 0) >= 2;
         const isDive = stats.isDive || false;
         
-        // 【核心补丁：极致介入】：权重巅峰期判定为回补良机，即便连黑也强制显示进攻建议
+        // 核心极致良机判定
         const isApexOpportunity = r1.s > 4.2 || (resonance && r1.s > 3.8);
 
-        let status = "APEX_ACTIVE";
-        let statusClass = "status-safe";
-        let patternText = "正在扫描路谱...";
-        let actionText = "等待切入";
-        let noteText = "分析中...";
-        
-        // 2. 终极逻辑矩阵决策矩阵
-        
-        // 🛑 场景：混沌态 (权重极散，无重点，防乱路)
-        if (entropy < 1.0 && !isApexOpportunity) {
+        let status = "ACTIVE", statusClass = "status-safe", patternText = "扫描路谱...", actionText = "等待", noteText = "...", currentUnit = 0;
+
+        // 3. 止盈止损红色预警与强制熔断逻辑
+        const isTP = sm.sessionPnL >= sm.limitTP;
+        const isSL = sm.sessionPnL <= sm.limitSL;
+
+        if (isTP) {
+            status = "TP_TARGET"; statusClass = "status-safe";
+            patternText = `<i class="ph-bold ph-trophy"></i> 止盈达成 (Profit Hit)`;
+            actionText = `<i class="ph-bold ph-check-circle"></i> 强制收工 / 今日盈余: ${sm.sessionPnL.toFixed(1)}U`;
+            noteText = "已达黄金目标，请锁定利润立刻下桌，防止回撤！";
+        } 
+        else if (isSL) {
+            status = "SL_BREAKER"; statusClass = "status-danger";
+            patternText = `<i class="ph-bold ph-warning-diamond"></i> 止损熔断 (Stop Loss)`;
+            actionText = `<i class="ph-bold ph-prohibit"></i> 熔断离场 / 亏损: ${sm.sessionPnL.toFixed(1)}U`;
+            noteText = "触碰当日风控底线，环境极端，请强制停手休息冷静。";
+        }
+        // 4. 指令量化与态势识别
+        else if (entropy < 1.0 && !isApexOpportunity) {
             status = "CHAOS"; statusClass = "status-danger";
             patternText = `<i class="ph-bold ph-warning"></i> 混沌乱流 (噪音区)`;
-            actionText = `<i class="ph-bold ph-hand-palm"></i> 严禁操作 (垃圾时间)`;
-            noteText = "数据离散度极低，能量完全对冲，此时介入大概率反复打脸。";
+            actionText = `<i class="ph-bold ph-hand-palm"></i> 0 Unit (离散观望)`;
+            noteText = "离散度极低，能量对冲。此时买入无异于盲博，强制避险。";
+            sm.lastTarget = null;
         }
-        // 👺 场景：逻辑偏移 (明灯反打，解决针对性克制)
         else if (mainRate < 20 && isConsecutiveLoss && !isApexOpportunity) {
             status = "INVERSE"; statusClass = "status-warn";
             patternText = `<i class="ph-bold ph-mask-happy"></i> 镜像反转 (明灯态)`;
-            actionText = `<i class="ph-bold ph-shield-check"></i> 弃主反打 [${r4.name}]`;
-            noteText = "权重系统被路子克制！逻辑发生严重偏移，建议尝试反向收割杀组。";
+            actionText = `<i class="ph-bold ph-shield-check"></i> 反打 [${r4.name}] 2U`;
+            noteText = "系统受阻，进入明灯期。反向操作杀组，盈利期望更高。";
+            currentUnit = 2; sm.lastTarget = r4.name;
         }
-        // 🔥 场景：极致回归 (解决漏单核心补丁)
         else if (isApexOpportunity) {
             status = "APEX_RECOVERY"; statusClass = "status-safe";
-            const level = r1.s > 4.5 ? "九五至尊" : "极致回归";
-            patternText = `<i class="ph-bold ph-target"></i> ${level} (良机捕捉)`;
-            actionText = `<i class="ph-bold ph-fire"></i> 强力介入 [${r1.name}]`;
-            noteText = `权重 ${r1.s.toFixed(1)} 处于极值，上局失准属随机波动。概率回归爆点，严禁空仓！`;
+            patternText = `<i class="ph-bold ph-target"></i> 绝杀回归 (重锤位)`;
+            actionText = `<i class="ph-bold ph-fire"></i> [${r1.name}] 重注 10U`;
+            noteText = "巅峰权重回补逻辑，连黑仅为波动干扰。爆点已至，严禁空仓！";
+            currentUnit = 10; sm.lastTarget = r1.name;
         }
-        // 🌊 场景：能量衰减 (龙尾预判)
         else if (r1.s > 3.0 && (slopeBS < -0.8 || slopeOE < -0.8)) {
             status = "DECAY"; statusClass = "status-warn";
             patternText = `<i class="ph-bold ph-chart-line-down"></i> 能量衰减 (龙尾预警)`;
-            actionText = `<i class="ph-bold ph-export"></i> 风险规避 / 减仓撤离`;
-            noteText = "极差动能快速收缩，趋势已到末端。防范最后一跳遭遇概率反杀。";
+            actionText = `<i class="ph-bold ph-export"></i> 撤离 / 1U 试探`;
+            noteText = "动能快速收缩，趋势末端将至。预防最后一跳遭遇反杀风险。";
+            currentUnit = 1; sm.lastTarget = r1.name;
         }
-        // 🚀 场景：核爆共振 (双向逻辑对齐)
         else if (resonance) {
             status = "NUCLEAR"; statusClass = "status-safe";
-            patternText = `<i class="ph-bold ph-unite"></i> 核爆共振 (共振信号)`;
-            actionText = `<i class="ph-bold ph-sword"></i> 7:3 阵型 [${r1.name} + ${r2.name}]`;
-            noteText = "大小与单双能量完全对齐。系统最高等级共振期，胜率最高模型。";
+            patternText = `<i class="ph-bold ph-unite"></i> 核爆共振 (强号信号)`;
+            actionText = `<i class="ph-bold ph-sword"></i> 主${r1.name} 7U | 防${r2.name} 3U`;
+            noteText = "全维逻辑对齐。胜率主波段建议 7:3 分仓布局，总计 10U。";
+            currentUnit = 10; sm.lastTarget = r1.name + r2.name;
         }
-        // ⚔️ 场景：熔断保护
         else if (isConsecutiveLoss) {
              status = "HALT"; statusClass = "status-danger";
-             patternText = `<i class="ph-bold ph-hand-palm"></i> 连黑熔断 (避风港)`;
-             actionText = `<i class="ph-bold ph-stop"></i> 强制观望`;
-             noteText = "当前不满足极致介入条件且正处于连黑期。务必等待绿色信号恢复。";
+             patternText = `<i class="ph-bold ph-hand-palm"></i> 连黑熔断 (避风)`;
+             actionText = `<i class="ph-bold ph-stop"></i> 0 Unit (强制观望)`;
+             noteText = "能量不足且处于连黑波段。务必等绿色 HIT 信号后再进场。";
+             sm.lastTarget = null;
         }
         else {
             if (r1.s - r2.s > 1.5) {
-                status = "SOLO";
-                patternText = `<i class="ph-bold ph-gps"></i> 坐标锁定 (强排位)`;
-                actionText = `<i class="ph-bold ph-crosshair"></i> 绝杀 [${r1.name}]`;
-                noteText = "领先优势巨大，排位阶梯极度清晰。进入标准战术收割模式。";
+                status = "SOLO"; patternText = `<i class="ph-bold ph-gps"></i> 坐标锁定 (强排位)`;
+                actionText = `<i class="ph-bold ph-crosshair"></i> [${r1.name}] 5U / [${r2.name}] 1U`;
+                noteText = "排位阶梯清晰，优势稳健。建议标准战术进攻布局。";
+                currentUnit = 6; sm.lastTarget = r1.name + r2.name;
             } else {
-                status = "DUAL";
-                patternText = `<i class="ph-bold ph-git-diff"></i> 双头蛇 (对峙态)`;
-                actionText = `<i class="ph-bold ph-scales"></i> 平推 [${r1.name} + ${r2.name}]`;
-                noteText = "两强对垒，极差处于震荡。建议等额投注平推，切勿主观二选一。";
+                status = "DUAL"; patternText = `<i class="ph-bold ph-git-diff"></i> 双头蛇 (对峙)`;
+                actionText = `<i class="ph-bold ph-scales"></i> 平推 [${r1.name} 2U + ${r2.name} 2U]`;
+                noteText = "两强对垒。建议等额平推，切勿由于主观偏好选单边。";
+                currentUnit = 4; sm.lastTarget = r1.name + r2.name;
             }
         }
 
-        if (isDive) {
-            patternText += " <span class='text-danger'>(跳水波及)</span>";
-            noteText = "⚠️ 警惕上期号码极值带来的算法偏航，本局注码必须下调 50%。";
+        // 5. 特殊修正：跳水减半
+        if (isDive && currentUnit > 0) {
+            patternText += " <span class='text-danger'>(跳水)</span>";
+            currentUnit = Math.max(1, Math.round(currentUnit / 2));
+            actionText = actionText.replace(/\d+U/g, currentUnit + "U");
+            noteText = "⚠️ 警惕上期极值偏离风险，注码已自动减半规避。";
         }
 
-        // 3. 极致可视化增强渲染
+        // 6. 执行全维度渲染
+        sm.lastBetUnit = currentUnit;
         elPanel.className = `card cmd-panel ${statusClass}`;
-        document.getElementById('cmd-status').innerText = status;
-        elPattern.innerHTML = patternText;
-        elAction.innerHTML = actionText;
-        elNote.innerHTML = noteText;
+        elStatus.innerHTML = `${status} <span class="${sm.sessionPnL>=0?'text-gold':'text-danger'}">[PnL: ${sm.sessionPnL.toFixed(1)}U]</span>`;
+        elPattern.innerHTML = patternText; elAction.innerHTML = actionText; elNote.innerHTML = noteText;
         
         const getSym = (s) => s > 0.2 ? '▲' : (s < -0.2 ? '▼' : '-');
         elSpread.innerHTML = `
-            <span class="text-dim">BS:</span> <span class="${gapBS >= 2.5 ? 'spread-h' : ''}">${gapBS.toFixed(1)}${getSym(slopeBS)}</span> <span class="text-dim">|</span> 
-            <span class="text-dim">OE:</span> <span class="${gapOE >= 2.5 ? 'spread-h' : ''}">${gapOE.toFixed(1)}${getSym(slopeOE)}</span> <span class="text-dim">|</span> 
-            <span class="text-dim">Gap12:</span> <span class="${(r1.s-r2.s) >= 1.5 ? 'spread-h' : ''}">${(r1.s-r2.s).toFixed(1)}</span>
+            <span class="text-dim">BS:</span> <span class="${gapBS >= 2.5 ? 'spread-h' : ''}">${gapBS.toFixed(1)}${getSym(slopeBS)}</span> | 
+            <span class="text-dim">OE:</span> <span class="${gapOE >= 2.5 ? 'spread-h' : ''}">${gapOE.toFixed(1)}${getSym(slopeOE)}</span> | 
+            <span class="text-dim">R12:</span> <span class="${(r1.s-r2.s) >= 1.5 ? 'spread-h' : ''}">${(r1.s-r2.s).toFixed(1)}</span>
         `;
         
-        // 记录本局极差，供下局对比计算斜率
-        mem.lastGapBS = gapBS;
-        mem.lastGapOE = gapOE;
-        mem.lastR1 = r1.s;
+        sm.lastGapBS = gapBS; sm.lastGapOE = gapOE; sm.lastR1 = r1.s;
     }
 </script>
 </body>
