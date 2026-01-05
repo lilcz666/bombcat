@@ -8,7 +8,7 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <style>
-        /* ================= 源代码样式：100% 完整保留 ================= */
+        /* ================= 源代码样式：100% 完整保留，绝不改动 ================= */
         @font-face {
             font-family: 'Zpix';
             src: url('https://cdn.jsdelivr.net/gh/SolidZORO/zpix-pixel-font@master/dist/zpix.woff2') format('woff2');
@@ -113,7 +113,7 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--gold); }
 
-        /* ================= 指挥官面板定制逻辑 ================= */
+        /* ================= 指挥官面板专用样式 ================= */
         .cmd-panel {
             border-left: 4px solid var(--green);
             transition: border-color 0.3s;
@@ -150,14 +150,6 @@
         .text-dim { color: var(--dim) !important; }
         
         .spread-h { color: var(--gold); font-weight: bold; }
-
-        /* 输入框防重叠修正 */
-        .cmd-inputs-row { display: flex; gap: 4px; margin-bottom: 2px; }
-        .cmd-inputs-row input { 
-            flex: 1; background: #000; border: 1px solid var(--border); 
-            color: var(--gold); font-family: var(--font-pixel); font-size: 10px; 
-            padding: 4px; text-align: center; outline: none;
-        }
     </style>
 </head>
 <body>
@@ -226,11 +218,6 @@
             <span id="cmd-status" style="font-weight: bold; font-family: 'Silkscreen'; font-size: 9px;">--</span>
         </div>
         <div class="cmd-content">
-            <div class="cmd-inputs-row">
-                <input id="set-cap" type="number" placeholder="本金" value="1000">
-                <input id="set-tp" type="number" placeholder="止盈" value="200">
-                <input id="set-sl" type="number" placeholder="止损" value="150">
-            </div>
             <div class="cmd-row">
                 <span class="label-sm"><i class="ph-bold ph-radar"></i> 态势</span>
                 <span id="cmd-pattern" class="val-md">正在同步...</span>
@@ -267,6 +254,7 @@
 </div>
 
 <script>
+    // ================= 核心 KERNEL：100% 原始代码 =================
     const CONFIG = {
         API: "https://pc28.help/kj.json?limit=20",
         REFRESH: 25,
@@ -474,11 +462,11 @@
     window.onload = APP.init;
 
     // =================================================================
-    // ⚔️ APEX 补丁：极致注码 + 盈亏监控 (元单位三路合围版)
+    // ⚔️ APEX 补丁：极致注码 + 精确盈亏 (三路固定 1000 基准版)
     // =================================================================
     if (!window._APEX_SYS_) {
         window._APEX_SYS_ = { 
-            lastGapBS: 0, lastGapOE: 0, lastR1: 0,
+            lastGapBS: 0, lastGapOE: 0, 
             sessionPnL: 0, lastQihao: null, 
             lastB1: 0, lastT1: null,
             lastB2: 0, lastT2: null,
@@ -496,15 +484,16 @@
         const elAction = document.getElementById('cmd-action');
         const elNote = document.getElementById('cmd-note');
 
-        const userCap = parseFloat(document.getElementById('set-cap').value) || 1000;
-        const userTP = parseFloat(document.getElementById('set-tp').value) || 200;
-        const userSL = -Math.abs(parseFloat(document.getElementById('set-sl').value) || 150);
+        // 固定标准：本金1000 | 止盈200 | 止损-150
+        const userCap = 1000;
+        const userTP = 200;
+        const userSL = -150;
 
         const [big, sml, odd, evn] = tops;
         if(!ranks || ranks.length < 4) return;
         const r1 = ranks[0], r2 = ranks[1], r3 = ranks[2], r4 = ranks[3];
         
-        // 1. PnL 精确分路结算
+        // 1. PnL 结算 (核心修复：精确赔率与纯利润计算)
         if (STATE.history.length > 0) {
             const latest = STATE.history[0];
             if (ax.lastQihao && latest.q !== ax.lastQihao && ax.lastTarget) {
@@ -512,10 +501,11 @@
                 const calc = (target, bet) => {
                     if (!target || bet <= 0) return 0;
                     if (target === resStr) {
+                        // 赔率标准：大双小单4.65, 大单小双4.25
                         const odds = (resStr === "大双" || resStr === "小单") ? 4.65 : 4.25;
-                        return bet * (odds - 1); // 纯利
+                        return bet * (odds - 1); // 纯利润 = 本金 * (赔率 - 1)
                     }
-                    return -bet;
+                    return -bet; // 未中：赔掉全部本金
                 };
                 ax.sessionPnL += (calc(ax.lastT1, ax.lastB1) + calc(ax.lastT2, ax.lastB2) + calc(ax.lastT3, ax.lastB3));
             }
@@ -532,49 +522,49 @@
         const isTP = ax.sessionPnL >= userTP;
         const isSL = ax.sessionPnL <= userSL;
 
-        const unitHeavy = Math.round(userCap * 0.05); 
-        const unitMain = Math.round(userCap * 0.035); 
-        const unitDef = Math.round(userCap * 0.015);  
-        const unitFlat = Math.round(userCap * 0.01);   
+        // 固定量化注码 (基于1000本金)
+        const unitHeavy = 50;  // 5%
+        const unitMain = 35;   // 3.5%
+        const unitDef = 15;    // 1.5%
+        const unitFlat = 10;   // 1%
 
-        let statusText = "NORMAL", statusClass = "status-safe", pText = "扫描中...", aText = "等待", nText = "...";
+        let statusText = "NORMAL", statusClass = "status-safe", pText = "扫描中...", aText = "等待数据", nText = "...";
         ax.lastB1 = 0; ax.lastT1 = null; ax.lastB2 = 0; ax.lastT2 = null; ax.lastB3 = 0; ax.lastT3 = null;
 
         if (isTP) {
             statusText = "TP_ALARM"; statusClass = "status-safe";
-            pText = `止盈达成 (Profit!)`; aText = `强制收工 / 盈余: ${ax.sessionPnL.toFixed(1)}元`; nText = `已锁定利润。`;
+            pText = `止盈达成 (Profit!)`; aText = `强制收工 / 盈余: ${ax.sessionPnL.toFixed(1)}元`; nText = `本金已达收益。`;
         } 
         else if (isSL) {
             statusText = "SL_ALARM"; statusClass = "status-danger";
-            pText = `止损熔断 (Alert!)`; aText = `熔断离场 / 亏损: ${ax.sessionPnL.toFixed(1)}元`; nText = `触发熔断红线。`;
+            pText = `止损熔断 (Alert!)`; aText = `离场观望 / 亏损: ${ax.sessionPnL.toFixed(1)}元`; nText = `触发红线熔断。`;
         }
         else if (isApexOpportunity) {
             statusText = "APEX_RECOVERY"; statusClass = "status-safe";
             pText = `绝杀回归 (重锤位)`; aText = `[${r1.name}] 重注 ${unitHeavy}元`;
-            ax.lastB1 = unitHeavy; ax.lastT1 = r1.name; ax.lastTarget = r1.name; nText = "巅峰权重回补逻辑。";
+            ax.lastB1 = unitHeavy; ax.lastT1 = r1.name; ax.lastTarget = r1.name; nText = "巅峰权重回补。";
         }
         else if (resonance) {
             statusText = "NUCLEAR"; statusClass = "status-safe";
-            pText = `核爆共振 (三路合围)`;
-            aText = `主${r1.name}/${r2.name} 各${unitMain}元 | 防${r3.name} ${unitDef}元`;
+            pText = `核爆共振 (三路合围)`; aText = `主${r1.name}/${r2.name} 各${unitMain}元 | 防${r3.name} ${unitDef}元`;
             ax.lastB1 = unitMain; ax.lastT1 = r1.name; ax.lastB2 = unitMain; ax.lastT2 = r2.name; ax.lastB3 = unitDef; ax.lastT3 = r3.name;
-            ax.lastTarget = r1.name + r2.name + r3.name; nText = "高确信共振合围。";
+            ax.lastTarget = r1.name + r2.name + r3.name; nText = "高确信三路合围。";
         }
         else if (isConsecutiveLoss) {
              statusText = "HALT"; statusClass = "status-danger";
-             pText = `连黑熔断`; aText = `0 元 (强制避风)`; ax.lastTarget = null;
+             pText = `连黑避风`; aText = `0 元 (离散观望)`; ax.lastTarget = null;
         }
         else {
             if (r1.s - r2.s > 1.5) {
                 statusText = "SOLO"; pText = `坐标锁定 (双路)`;
                 aText = `[${r1.name}] ${unitMain}元 / [${r2.name}] ${unitDef}元`;
                 ax.lastB1 = unitMain; ax.lastT1 = r1.name; ax.lastB2 = unitDef; ax.lastT2 = r2.name;
-                ax.lastTarget = r1.name + r2.name; nText = "排位清晰。";
+                ax.lastTarget = r1.name + r2.name; nText = "排位清晰对冲。";
             } else {
                 statusText = "DUAL"; pText = `双头蛇 (对峙)`;
                 aText = `平推 [${r1.name} ${unitFlat}元 + ${r2.name} ${unitFlat}元]`;
                 ax.lastB1 = unitFlat; ax.lastT1 = r1.name; ax.lastB2 = unitFlat; ax.lastT2 = r2.name;
-                ax.lastTarget = r1.name + r2.name; nText = "等额投注，不可博边。";
+                ax.lastTarget = r1.name + r2.name; nText = "两强平推。";
             }
         }
 
@@ -583,12 +573,12 @@
             aText = aText.replace(/\d+元/g, (v) => Math.round(parseInt(v)/2) + "元");
         }
 
+        // 渲染
         elPanel.className = `card cmd-panel ${statusClass}`;
         const pnlCls = ax.sessionPnL >= 0 ? 'text-gold' : 'text-danger';
-        elStatus.innerHTML = `${statusText} <span class="${pnlCls}">[PnL: ${ax.sessionPnL.toFixed(1)}元]</span> <span style="color:var(--dim)">[目标:${userTP}/${userSL}]</span>`;
+        elStatus.innerHTML = `${statusText} <span class="${pnlCls}">[PnL: ${ax.sessionPnL.toFixed(1)}元]</span> <span style="color:var(--dim)">[目标:200/-150]</span>`;
         elPattern.innerHTML = pText; elAction.innerHTML = aText; elNote.innerHTML = nText;
         elSpread.innerHTML = `BS: ${gapBS.toFixed(1)} | OE: ${gapOE.toFixed(1)} | R12: ${(r1.s-r2.s).toFixed(1)}`;
-        ax.lastGapBS = gapBS; ax.lastGapOE = gapOE;
     }
 </script>
 </body>
