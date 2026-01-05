@@ -151,12 +151,12 @@
         
         .spread-h { color: var(--gold); font-weight: bold; }
 
-        /* 新增输入框样式 */
-        .cmd-inputs { display: flex; gap: 5px; margin-bottom: 8px; border-bottom: 1px solid #222; padding-bottom: 8px; }
+        /* 修复排版挤压 */
+        .cmd-inputs { display: flex; gap: 5px; margin-bottom: 4px; }
         .cmd-inputs input { 
             flex: 1; background: #000; border: 1px solid var(--border); 
             color: var(--gold); font-family: var(--font-pixel); font-size: 10px; 
-            padding: 4px; text-align: center; outline: none;
+            padding: 3px; text-align: center; outline: none;
         }
     </style>
 </head>
@@ -479,8 +479,11 @@
     // =================================================================
     if (!window._APEX_SYS_) {
         window._APEX_SYS_ = { 
-            lastGapBS: 0, lastGapOE: 0, lastR1: 0,
-            sessionPnL: 0, lastQihao: null, 
+            lastGapBS: 0, 
+            lastGapOE: 0, 
+            lastR1: 0,
+            sessionPnL: 0, 
+            lastQihao: null, 
             lastB1: 0, lastT1: null,
             lastB2: 0, lastT2: null,
             lastB3: 0, lastT3: null,
@@ -506,7 +509,7 @@
         if(!ranks || ranks.length < 4) return;
         const r1 = ranks[0], r2 = ranks[1], r3 = ranks[2], r4 = ranks[3];
         
-        // 1. PnL 结算 (支持三位独立结算)
+        // 1. PnL 结算 (支持三位独立结算纯利润)
         if (STATE.history.length > 0) {
             const latest = STATE.history[0];
             if (ax.lastQihao && latest.q !== ax.lastQihao && ax.lastTarget) {
@@ -588,7 +591,7 @@
             statusText = "NUCLEAR"; statusClass = "status-safe";
             patternText = `<i class="ph-bold ph-unite"></i> 核爆共振 (三路合围)`;
             actionText = `<i class="ph-bold ph-sword"></i> 主${r1.name}/${r2.name} 各${unitMain}元 | 防${r3.name} ${unitDef}元`;
-            noteText = "高确信共振。采用三路合围策略，主攻双开对冲。";
+            noteText = "高确信共振。采用三路合围策略，总计 " + ((unitMain*2)+unitDef) + "元。";
             ax.lastB1 = unitMain; ax.lastT1 = r1.name; ax.lastB2 = unitMain; ax.lastT2 = r2.name; ax.lastB3 = unitDef; ax.lastT3 = r3.name;
             ax.lastTarget = r1.name + r2.name + r3.name; currentTotal = (unitMain * 2) + unitDef;
         }
