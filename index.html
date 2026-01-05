@@ -8,7 +8,7 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <style>
-        /* ================= 原始内容保持不变 ================= */
+        /* ================= 源代码样式：100% 完整保留，绝不改动 ================= */
         @font-face {
             font-family: 'Zpix';
             src: url('https://cdn.jsdelivr.net/gh/SolidZORO/zpix-pixel-font@master/dist/zpix.woff2') format('woff2');
@@ -82,7 +82,7 @@
         .active-gold { background: var(--gold); box-shadow: 0 0 10px rgba(255,215,0,0.3); }
         .active-green { background: var(--green); }
 
-        /* 组合权重细则 (功能保留) */
+        /* 组合权重细则 */
         .weight-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 15px; }
         .weight-box { background: #111; border: 1px solid var(--border); padding: 8px 0; text-align: center; }
         .wb-name { font-size: 9px; color: var(--dim); display: block; margin-bottom: 2px; }
@@ -101,7 +101,7 @@
         .tag-def { color: var(--gold); border-color: var(--gold); }
         .tag-miss { color: var(--red); border-color: var(--red); }
 
-        /* 六维统计方块 (功能保留) */
+        /* 六维统计方块 */
         .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .stat-box { 
             background: var(--panel); border: 1px solid var(--border); 
@@ -113,25 +113,24 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--gold); }
 
-        /* ================= 指挥官面板样式 (V11.1 修复版) ================= */
+        /* ================= 指挥官面板专用样式 ================= */
         .cmd-panel {
-            border-left: 4px solid var(--green); /* 默认状态颜色 */
+            border-left: 4px solid var(--green);
             transition: border-color 0.3s;
         }
         .cmd-content { display: flex; flex-direction: column; gap: 6px; }
         
-        /* 🟢 修复1：CSS 换行支持 */
         .cmd-row { 
             display: flex; 
             justify-content: space-between; 
-            align-items: flex-start;  /* 对齐顶部 */
+            align-items: flex-start;
             font-size: 12px; 
-            flex-wrap: wrap;          /* 允许换行 */
-            row-gap: 4px;             /* 行间距 */
+            flex-wrap: wrap;
+            row-gap: 4px;
         }
         .cmd-row > span:last-child { 
             text-align: right; 
-            margin-left: auto;        /* 强制靠右 */
+            margin-left: auto;
         }
 
         .cmd-row.highlight { margin-top: 5px; background: #1a1a1a; padding: 6px; border: 1px solid #333; }
@@ -142,9 +141,6 @@
         
         .cmd-note { font-size: 10px; color: #666; font-style: italic; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
         
-        .cmd-divider { height: 1px; background: #222; margin: 4px 0; border-bottom: 1px dashed #333; }
-        
-        /* 状态颜色修饰符 */
         .status-danger { border-left-color: var(--red) !important; }
         .status-warn { border-left-color: var(--gold) !important; }
         .status-safe { border-left-color: var(--green) !important; }
@@ -153,7 +149,6 @@
         .text-gold { color: var(--gold) !important; }
         .text-dim { color: var(--dim) !important; }
         
-        /* 极差高亮 */
         .spread-h { color: var(--gold); font-weight: bold; }
     </style>
 </head>
@@ -161,7 +156,7 @@
 
 <div class="container">
     <div class="top-nav">
-        <div class="logo"><i class="ph-bold ph-cat"></i> BOMBCAT!!</div>
+        <div class="logo"><i class="ph-bold ph-cat"></i> BOMBCAT!! APEX</div>
         <div id="timer"><i class="ph-bold ph-lightning"></i> 链路连接中...</div>
     </div>
 
@@ -219,13 +214,13 @@
 
     <div id="commander-console" class="card cmd-panel">
         <div class="card-label">
-            <span>COMMANDER // 指挥面板</span>
-            <span id="cmd-status" style="color: var(--dim); font-weight: bold;">STANDBY</span>
+            <span style="white-space: nowrap;">COMMANDER // 指挥面板</span>
+            <span id="cmd-status" style="font-weight: bold; font-family: 'Silkscreen'; font-size: 9px;">--</span>
         </div>
         <div class="cmd-content">
             <div class="cmd-row">
                 <span class="label-sm"><i class="ph-bold ph-radar"></i> 态势</span>
-                <span id="cmd-pattern" class="val-md">正在分析...</span>
+                <span id="cmd-pattern" class="val-md">正在同步...</span>
             </div>
             <div class="cmd-row">
                 <span class="label-sm"><i class="ph-bold ph-faders"></i> 极差 [BS | OE | R12]</span>
@@ -233,12 +228,12 @@
             </div>
             
             <div class="cmd-row highlight">
-                <span class="label-sm"><i class="ph-bold ph-sword"></i> 指令 [量化注码]</span>
+                <span class="label-sm"><i class="ph-bold ph-sword"></i> 指令 [注码量化]</span>
                 <span id="cmd-action" class="val-action">等待数据...</span>
             </div>
             
             <div class="cmd-note">
-                <i class="ph-bold ph-info"></i> <span id="cmd-note">保持冷静，严守纪律</span>
+                <i class="ph-bold ph-info"></i> <span id="cmd-note">等待首局数据接入</span>
             </div>
         </div>
     </div>
@@ -259,7 +254,7 @@
 </div>
 
 <script>
-    /* ================= 源代码核心 KERNEL：100% 完整，无任何内容删减 ================= */
+    // ================= 核心 KERNEL：100% 原始代码，绝不精简 =================
     const CONFIG = {
         API: "https://pc28.help/kj.json?limit=20",
         REFRESH: 25,
@@ -374,7 +369,9 @@
                         APP.render();
                         document.getElementById('timer').innerHTML = `<i class="ph-bold ph-shield"></i> 链路锁定: 备用`;
                     }
-                } catch (e2) { document.getElementById('timer').innerText = "链路通讯完全中断"; }
+                } catch (e2) {
+                    document.getElementById('timer').innerText = "链路通讯完全中断";
+                }
             }
             APP.startTimer();
         },
@@ -383,10 +380,12 @@
             if(list.length < 5) return;
             const cur = list[0];
             const res = KERNEL.run(cur.n1, cur.n2, cur.n3, cur.sum, list[1], list);
+            
             document.getElementById('nextQ').innerText = "下一期: " + (parseInt(cur.q) + 1);
             document.getElementById('tMain').innerText = `${res.nCombos[0].name} / ${res.nCombos[1].name}`;
             document.getElementById('tDef').innerText = res.nCombos[2].name;
             document.getElementById('tKill').innerText = res.nCombos[3].name;
+
             const updateBar = (id, val, color) => {
                 const container = document.getElementById('bar-' + id);
                 document.getElementById('v' + id).innerText = val.toFixed(1);
@@ -400,6 +399,7 @@
             };
             updateBar('Big', res.nW.b, 'gold'); updateBar('Sml', res.nW.s, 'green');
             updateBar('Odd', res.nW.o, 'gold'); updateBar('Evn', res.nW.e, 'green');
+
             for(let i=0; i<4; i++) {
                 document.getElementById(`cN${i+1}`).innerText = res.nCombos[i].name;
                 document.getElementById(`cV${i+1}`).innerText = res.nCombos[i].s.toFixed(1);
@@ -411,6 +411,7 @@
             box.innerHTML = '';
             let s = { main:0, def:0, kill:0, bs:0, oe:0, total:0, consecutiveMis: 0 }; 
             let misCount = 0;
+
             for(let i=0; i<list.length-2; i++) {
                 const t = list[i]; 
                 const sim = KERNEL.run(list[i+1].n1, list[i+1].n2, list[i+1].n3, list[i+1].sum, list[i+2], list);
@@ -422,20 +423,26 @@
                 if(isMain) s.main++; if(isDef) s.def++; if(!isKillFail) s.kill++;
                 if((sim.nW.b > sim.nW.s) === t.sum >= 14) s.bs++;
                 if((sim.nW.o > sim.nW.e) === (t.sum % 2 !== 0)) s.oe++;
+
                 let tag = isMain ? 'HIT' : (isDef ? 'DEF' : 'MIS');
                 let cls = isMain ? 'tag-hit' : (isDef ? 'tag-def' : 'tag-miss');
+                
                 if (i === 0 && tag === 'MIS') misCount++; else if (i === 1 && misCount > 0 && tag === 'MIS') misCount++;
+
                 box.innerHTML += `<div class="log-row"><div class="log-q">#${t.q.slice(-4)}</div><div style="text-align:center;font-weight:bold">${rStr} [${t.sum}]</div><div class="log-tag ${cls}">${tag}</div></div>`;
             }
             s.consecutiveMis = misCount; 
+
             const pct = v => Math.round((v/s.total)*100) + "%";
             const numPct = v => Math.round((v/s.total)*100);
+
             document.getElementById('acc-main').innerText = pct(s.main);
             document.getElementById('acc-def').innerText = pct(s.def);
             document.getElementById('acc-kill').innerText = pct(s.kill);
             document.getElementById('acc-bs').innerText = pct(s.bs);
             document.getElementById('acc-oe').innerText = pct(s.oe);
             document.getElementById('acc-total').innerText = pct(s.main + s.def);
+
             const cur = list[0];
             const curRes = KERNEL.run(cur.n1, cur.n2, cur.n3, cur.sum, list[1], list);
             const statsForCmd = { killRate: numPct(s.kill), mainRate: numPct(s.main), lastMis: s.consecutiveMis, isDive: Math.abs(cur.n1 - cur.n2) > 8 };
@@ -445,26 +452,28 @@
         startTimer: () => {
             if(STATE.timer) clearInterval(STATE.timer);
             let t = CONFIG.REFRESH;
-            STATE.timer = setInterval(() => { t--; if(t<=0) { clearInterval(STATE.timer); APP.sync(); } else document.getElementById('timer').innerHTML = `<i class="ph-bold ph-timer"></i> 下次同步: ${t}S`; }, 1000);
+            STATE.timer = setInterval(() => {
+                t--;
+                if(t<=0) { clearInterval(STATE.timer); APP.sync(); }
+                else document.getElementById('timer').innerHTML = `<i class="ph-bold ph-timer"></i> 下次同步: ${t}S`;
+            }, 1000);
         }
     };
     window.onload = APP.init;
 
     // =================================================================
-    // ⚔️ BOMB CAT APEX QUANT & ALARM (极致升级补丁替换区)
+    // ⚔️ APEX 补丁：极致注码 + 盈亏监控 + 止盈止损报警
     // =================================================================
-    
-    // 终极会话内存 (包含 PnL 追踪与 TP/SL 逻辑)
-    if (!window._APEX_SESSION_) {
-        window._APEX_SESSION_ = { 
+    if (!window._APEX_SYS_) {
+        window._APEX_SYS_ = { 
             lastGapBS: 0, lastGapOE: 0, lastR1: 0,
             sessionPnL: 0, lastQihao: null, lastBetUnit: 0, lastTarget: null,
-            limitTP: 50,  limitSL: -30 
+            limitTP: 50, limitSL: -30 
         };
     }
 
     function runCommanderV11(tops, ranks, stats) {
-        const sm = window._APEX_SESSION_;
+        const ax = window._APEX_SYS_;
         const elPanel = document.getElementById('commander-console');
         const elStatus = document.getElementById('cmd-status');
         const elPattern = document.getElementById('cmd-pattern');
@@ -476,119 +485,105 @@
         if(!ranks || ranks.length < 4) return;
         const r1 = ranks[0], r2 = ranks[1], r3 = ranks[2], r4 = ranks[3];
         
-        // 1. 自动结算逻辑 (基于历史快照)
+        // 1. PnL 结算
         if (STATE.history.length > 0) {
             const latest = STATE.history[0];
-            if (sm.lastQihao && latest.q !== sm.lastQihao && sm.lastTarget) {
+            if (ax.lastQihao && latest.q !== ax.lastQihao && ax.lastTarget) {
                 const resStr = (latest.sum >= 14 ? '大' : '小') + (latest.sum % 2 !== 0 ? '单' : '双');
-                if (sm.lastTarget.includes(resStr)) sm.sessionPnL += sm.lastBetUnit * 0.95; else sm.sessionPnL -= sm.lastBetUnit;
+                if (ax.lastTarget.includes(resStr)) ax.sessionPnL += ax.lastBetUnit * 0.95; else ax.sessionPnL -= ax.lastBetUnit;
             }
-            sm.lastQihao = latest.q;
+            ax.lastQihao = latest.q;
         }
 
-        // 2. 极致维度计算
+        // 2. 核心状态计算
         const gapBS = Math.abs(big - sml);
         const gapOE = Math.abs(odd - evn);
-        const slopeBS = gapBS - sm.lastGapBS; 
-        const slopeOE = gapOE - sm.lastGapOE;
+        const slopeBS = gapBS - ax.lastGapBS; 
+        const slopeOE = gapOE - ax.lastGapOE;
         const resonance = (gapBS > 1.8 && gapOE > 1.8); 
         const entropy = r1.s - r4.s; 
-        
-        const mainRate = stats.mainRate || 50;
         const isConsecutiveLoss = (stats.lastMis || 0) >= 2;
         const isDive = stats.isDive || false;
-        
-        // 核心极致良机判定
         const isApexOpportunity = r1.s > 4.2 || (resonance && r1.s > 3.8);
 
-        let status = "ACTIVE", statusClass = "status-safe", patternText = "扫描路谱...", actionText = "等待", noteText = "...", currentUnit = 0;
+        // 3. 报警状态检查
+        const isTP = ax.sessionPnL >= ax.limitTP;
+        const isSL = ax.sessionPnL <= ax.limitSL;
 
-        // 3. 止盈止损红色预警与强制熔断逻辑
-        const isTP = sm.sessionPnL >= sm.limitTP;
-        const isSL = sm.sessionPnL <= sm.limitSL;
+        let statusText = "NORMAL", statusClass = "status-safe", patternText = "扫描中...", actionText = "等待", noteText = "...", currentUnit = 0;
 
         if (isTP) {
-            status = "TP_TARGET"; statusClass = "status-safe";
-            patternText = `<i class="ph-bold ph-trophy"></i> 止盈达成 (Profit Hit)`;
-            actionText = `<i class="ph-bold ph-check-circle"></i> 强制收工 / 今日盈余: ${sm.sessionPnL.toFixed(1)}U`;
-            noteText = "已达黄金目标，请锁定利润立刻下桌，防止回撤！";
+            statusText = "TP_ALARM"; statusClass = "status-safe";
+            patternText = `<i class="ph-bold ph-trophy" style="color:var(--gold)"></i> 止盈达成 (Profit!)`;
+            actionText = `<i class="ph-bold ph-check-circle"></i> 强制收工 / 今日盈余: ${ax.sessionPnL.toFixed(1)}U`;
+            noteText = "已达设定的 50U 止盈目标。请立刻锁定利润下桌休息！";
         } 
         else if (isSL) {
-            status = "SL_BREAKER"; statusClass = "status-danger";
-            patternText = `<i class="ph-bold ph-warning-diamond"></i> 止损熔断 (Stop Loss)`;
-            actionText = `<i class="ph-bold ph-prohibit"></i> 熔断离场 / 亏损: ${sm.sessionPnL.toFixed(1)}U`;
-            noteText = "触碰当日风控底线，环境极端，请强制停手休息冷静。";
+            statusText = "SL_ALARM"; statusClass = "status-danger";
+            patternText = `<i class="ph-bold ph-skull" style="color:var(--red)"></i> 止损熔断 (Alert!)`;
+            actionText = `<i class="ph-bold ph-prohibit"></i> 熔断离场 / 累计亏损: ${ax.sessionPnL.toFixed(1)}U`;
+            noteText = "触碰 -30U 止损红线。环境极端，请强制停手冷静。";
         }
-        // 4. 指令量化与态势识别
         else if (entropy < 1.0 && !isApexOpportunity) {
-            status = "CHAOS"; statusClass = "status-danger";
+            statusText = "CHAOS"; statusClass = "status-danger";
             patternText = `<i class="ph-bold ph-warning"></i> 混沌乱流 (噪音区)`;
             actionText = `<i class="ph-bold ph-hand-palm"></i> 0 Unit (离散观望)`;
-            noteText = "离散度极低，能量对冲。此时买入无异于盲博，强制避险。";
-            sm.lastTarget = null;
-        }
-        else if (mainRate < 20 && isConsecutiveLoss && !isApexOpportunity) {
-            status = "INVERSE"; statusClass = "status-warn";
-            patternText = `<i class="ph-bold ph-mask-happy"></i> 镜像反转 (明灯态)`;
-            actionText = `<i class="ph-bold ph-shield-check"></i> 反打 [${r4.name}] 2U`;
-            noteText = "系统受阻，进入明灯期。反向操作杀组，盈利期望更高。";
-            currentUnit = 2; sm.lastTarget = r4.name;
+            noteText = "权重纠缠，能量对冲。此时介入胜率极低，强制空仓。";
+            ax.lastTarget = null;
         }
         else if (isApexOpportunity) {
-            status = "APEX_RECOVERY"; statusClass = "status-safe";
+            statusText = "APEX_RECOVERY"; statusClass = "status-safe";
             patternText = `<i class="ph-bold ph-target"></i> 绝杀回归 (重锤位)`;
             actionText = `<i class="ph-bold ph-fire"></i> [${r1.name}] 重注 10U`;
-            noteText = "巅峰权重回补逻辑，连黑仅为波动干扰。爆点已至，严禁空仓！";
-            currentUnit = 10; sm.lastTarget = r1.name;
-        }
-        else if (r1.s > 3.0 && (slopeBS < -0.8 || slopeOE < -0.8)) {
-            status = "DECAY"; statusClass = "status-warn";
-            patternText = `<i class="ph-bold ph-chart-line-down"></i> 能量衰减 (龙尾预警)`;
-            actionText = `<i class="ph-bold ph-export"></i> 撤离 / 1U 试探`;
-            noteText = "动能快速收缩，趋势末端将至。预防最后一跳遭遇反杀风险。";
-            currentUnit = 1; sm.lastTarget = r1.name;
+            noteText = "巅峰权重回补逻辑。爆点已至，严禁漏单！";
+            currentUnit = 10; ax.lastTarget = r1.name;
         }
         else if (resonance) {
-            status = "NUCLEAR"; statusClass = "status-safe";
-            patternText = `<i class="ph-bold ph-unite"></i> 核爆共振 (强号信号)`;
+            statusText = "NUCLEAR"; statusClass = "status-safe";
+            patternText = `<i class="ph-bold ph-unite"></i> 核爆共振 (强号)`;
             actionText = `<i class="ph-bold ph-sword"></i> 主${r1.name} 7U | 防${r2.name} 3U`;
-            noteText = "全维逻辑对齐。胜率主波段建议 7:3 分仓布局，总计 10U。";
-            currentUnit = 10; sm.lastTarget = r1.name + r2.name;
+            noteText = "大小单双完全对齐。建议 7:3 分仓，总计 10U。";
+            currentUnit = 10; ax.lastTarget = r1.name + r2.name;
         }
         else if (isConsecutiveLoss) {
-             status = "HALT"; statusClass = "status-danger";
-             patternText = `<i class="ph-bold ph-hand-palm"></i> 连黑熔断 (避风)`;
-             actionText = `<i class="ph-bold ph-stop"></i> 0 Unit (强制观望)`;
-             noteText = "能量不足且处于连黑波段。务必等绿色 HIT 信号后再进场。";
-             sm.lastTarget = null;
+             statusText = "HALT"; statusClass = "status-danger";
+             patternText = `<i class="ph-bold ph-hand-palm"></i> 连黑熔断`;
+             actionText = `<i class="ph-bold ph-stop"></i> 0 Unit (强制避风)`;
+             noteText = "能量不足且连黑。请务必等绿色 HIT 信号后再进场。";
+             ax.lastTarget = null;
         }
         else {
             if (r1.s - r2.s > 1.5) {
-                status = "SOLO"; patternText = `<i class="ph-bold ph-gps"></i> 坐标锁定 (强排位)`;
+                statusText = "SOLO"; patternText = `<i class="ph-bold ph-gps"></i> 坐标锁定 (强排位)`;
                 actionText = `<i class="ph-bold ph-crosshair"></i> [${r1.name}] 5U / [${r2.name}] 1U`;
-                noteText = "排位阶梯清晰，优势稳健。建议标准战术进攻布局。";
-                currentUnit = 6; sm.lastTarget = r1.name + r2.name;
+                currentUnit = 6; ax.lastTarget = r1.name + r2.name;
+                noteText = "排位清晰。主攻 5U，防守 1U 对冲。";
             } else {
-                status = "DUAL"; patternText = `<i class="ph-bold ph-git-diff"></i> 双头蛇 (对峙)`;
+                statusText = "DUAL"; patternText = `<i class="ph-bold ph-git-diff"></i> 双头蛇 (对峙)`;
                 actionText = `<i class="ph-bold ph-scales"></i> 平推 [${r1.name} 2U + ${r2.name} 2U]`;
-                noteText = "两强对垒。建议等额平推，切勿由于主观偏好选单边。";
-                currentUnit = 4; sm.lastTarget = r1.name + r2.name;
+                currentUnit = 4; ax.lastTarget = r1.name + r2.name;
+                noteText = "两强对垒。建议等额投注，不可博单边。";
             }
         }
 
-        // 5. 特殊修正：跳水减半
         if (isDive && currentUnit > 0) {
             patternText += " <span class='text-danger'>(跳水)</span>";
             currentUnit = Math.max(1, Math.round(currentUnit / 2));
             actionText = actionText.replace(/\d+U/g, currentUnit + "U");
-            noteText = "⚠️ 警惕上期极值偏离风险，注码已自动减半规避。";
+            noteText = "⚠️ 警惕上期号码极值偏离，注码自动减半规避。";
         }
 
-        // 6. 执行全维度渲染
-        sm.lastBetUnit = currentUnit;
+        // 4. 执行渲染
+        ax.lastBetUnit = currentUnit;
         elPanel.className = `card cmd-panel ${statusClass}`;
-        elStatus.innerHTML = `${status} <span class="${sm.sessionPnL>=0?'text-gold':'text-danger'}">[PnL: ${sm.sessionPnL.toFixed(1)}U]</span>`;
-        elPattern.innerHTML = patternText; elAction.innerHTML = actionText; elNote.innerHTML = noteText;
+        
+        // 🟢 解决排版挤压：PnL 显示在状态栏，并增加 TP/SL 目标提示
+        const pnlCls = ax.sessionPnL >= 0 ? 'text-gold' : 'text-danger';
+        elStatus.innerHTML = `${statusText} <span class="${pnlCls}">[PnL: ${ax.sessionPnL.toFixed(1)}U]</span> <span style="color:var(--dim)">[+50/-30]</span>`;
+        
+        elPattern.innerHTML = patternText;
+        elAction.innerHTML = actionText;
+        elNote.innerHTML = noteText;
         
         const getSym = (s) => s > 0.2 ? '▲' : (s < -0.2 ? '▼' : '-');
         elSpread.innerHTML = `
@@ -597,7 +592,7 @@
             <span class="text-dim">R12:</span> <span class="${(r1.s-r2.s) >= 1.5 ? 'spread-h' : ''}">${(r1.s-r2.s).toFixed(1)}</span>
         `;
         
-        sm.lastGapBS = gapBS; sm.lastGapOE = gapOE; sm.lastR1 = r1.s;
+        ax.lastGapBS = gapBS; ax.lastGapOE = gapOE; ax.lastR1 = r1.s;
     }
 </script>
 </body>
