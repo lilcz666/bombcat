@@ -223,7 +223,7 @@
                 <span id="cmd-pattern" class="val-md">正在同步...</span>
             </div>
             <div class="cmd-row">
-                <span class="label-sm"><i class="ph-bold ph-faders"></i> 极差 [A轨 | B轨 | C轨]</span>
+                <span class="label-sm"><i class="ph-bold ph-faders"></i> 极差 [BS | OE | ABC轨]</span>
                 <span id="cmd-spread" class="val-num">-- | -- | --</span>
             </div>
             
@@ -511,8 +511,8 @@
         const lockX = (gBS > 3.0 || gOE > 3.0); 
 
         // 3. 实战状态判定
-        const isTrap = (gapB < 0.4); 
-        const killThreat = (gapC < 0.4); 
+        const isTrap = (gapB < 0.6); 
+        const killThreat = (gapC < 0.8 || r4.s > 1.6); 
         const isLamp = (stats.mainRate < 0.2); 
         const isApex = (r1.s > 4.2 && gapA > 1.8 && !isTrap);
         const isTP = ax.sessionPnL >= userTP, isSL = ax.sessionPnL <= userSL;
@@ -527,7 +527,7 @@
             pTxt = `止损熔断`; aTxt = `离场观望`; nText = `触发风控底线。`; sClass = "status-danger";
         }
         else if (killThreat) {
-            pTxt = `杀组威胁 (C轨失效)`; aTxt = `0 元 (离散避风)`; nTxt = `杀组权重过大，暂时停火。`; sClass = "status-danger";
+            pTxt = `杀组威胁 (压力报警)`; aTxt = `0 元 (离散避风)`; nTxt = `杀组权重过标或间距过近。`; sClass = "status-danger";
         }
         else if (isLamp) {
             pTxt = `明灯反打 (V10)`; aTxt = `[${r2.name}] 35元 / [${r3.name}] 15元`; 
@@ -538,8 +538,8 @@
             ax.lastB1 = 30; ax.lastT1 = r1.name; ax.lastB2 = 20; ax.lastT2 = r2.name; nText = "主力权重极高，覆盖前二。";
         }
         else if (isTrap) {
-            pTxt = `共振陷阱 (B轨粘连)`; aTxt = `平推 [${r1.name} 20|${r2.name} 20|${r3.name} 10]`;
-            ax.lastB1 = 20; ax.lastT1 = r1.name; ax.lastB2 = 20; ax.lastT2 = r2.name; ax.lastB3 = 10; ax.lastT3 = r3.name; nText = "二三位粘连，强制三路合围。"; sClass = "status-warn";
+            pTxt = `共振陷阱 (三足鼎立)`; aTxt = `平推 [${r1.name} 20|${r2.name} 20|${r3.name} 20]`;
+            ax.lastB1 = 20; ax.lastT1 = r1.name; ax.lastB2 = 20; ax.lastT2 = r2.name; ax.lastB3 = 20; ax.lastT3 = r3.name; nText = "二三位粘连，防守位权重转正。"; sClass = "status-warn";
         }
         else if (gapA > 1.2) {
             pTxt = `坐标锁定 (双路对冲)`; aTxt = `[${r1.name}] 35元 / [${r2.name}] 15元`;
@@ -561,7 +561,7 @@
         const pnlCls = ax.sessionPnL >= 0 ? 'text-gold' : 'text-danger';
         elStatus.innerHTML = `PNL: <span class="${pnlCls}">${ax.sessionPnL.toFixed(1)}元</span> <span style="color:var(--dim)">[200/-150]</span>`;
         elPattern.innerHTML = pTxt + (lockX ? " <small style='color:var(--blue)'>[锁强]</small>" : "");
-        elSpread.innerHTML = `<span class="${gapA>=1.5?'text-gold':''}">A:${gapA.toFixed(1)}</span> | <span class="${isTrap?'text-danger':''}">B:${gapB.toFixed(1)}</span> | <span class="${killThreat?'text-danger':''}">C:${gapC.toFixed(1)}</span>`;
+        elSpread.innerHTML = `BS:${gBS.toFixed(1)} | OE:${gOE.toFixed(1)} | <span class="${gapA>=1.5?'text-gold':''}">A:${gapA.toFixed(1)}</span> | <span class="${isTrap?'text-danger':''}">B:${gapB.toFixed(1)}</span> | <span class="${killThreat?'text-danger':''}">C:${gapC.toFixed(1)}</span>`;
         elAction.innerHTML = aTxt; elNote.innerHTML = nText;
     }
 </script>
