@@ -156,7 +156,7 @@
 
 <div class="container">
     <div class="top-nav">
-        <div class="logo"><i class="ph-bold ph-cat"></i> BOMBCAT!! APEX</div>
+        <div class="logo"><i class="ph-bold ph-cat"></i> BOMBCAT!!</div>
         <div id="timer"><i class="ph-bold ph-lightning"></i> 链路连接中...</div>
     </div>
 
@@ -512,7 +512,7 @@
 
         // 3. 实战状态判定
         const isTrap = (gapB < 0.6); 
-        const killThreat = (gapC < 0.8 || r4.s > 1.6); 
+        const killThreshold = (r4.s > 1.2) ? 0.8 : 0.5; const killThreat = (gapC < killThreshold || r4.s > 1.6); 
         const isLamp = (stats.mainRate < 0.2); 
         const isApex = (r1.s > 4.2 && gapA > 1.8 && !isTrap);
         const isTP = ax.sessionPnL >= userTP, isSL = ax.sessionPnL <= userSL;
