@@ -223,7 +223,7 @@
                 <span id="cmd-pattern" class="val-md">正在同步...</span>
             </div>
             <div class="cmd-row">
-                <span class="label-sm"><i class="ph-bold ph-faders"></i> 极差 [BS | OE | R12]</span>
+                <span class="label-sm"><i class="ph-bold ph-faders"></i> 极差 [A轨 | B轨 | C轨]</span>
                 <span id="cmd-spread" class="val-num">-- | -- | --</span>
             </div>
             
@@ -321,8 +321,6 @@
             if(d3===0 || d3===6) { w.b=10+seed; w.s=10-seed; w.o=10+seed; w.e=10-seed; }
             const boost = (k1, k2) => { if(Math.abs(w[k1] - w[k2]) < 5) { if(w[k1] > w[k2]) w[k1] += 30; else w[k2] += 30; } };
             boost('b', 's'); boost('o', 'e');
-            let minV = Math.min(w.b, w.s, w.o, w.e);
-            if(minV < 5) { let lift = Math.abs(minV) + 10; w.b += lift; w.s += lift; w.o += lift; w.e += lift; }
             let totalInd = w.b + w.s + w.o + w.e || 1;
             let nW = { b: (w.b / totalInd) * 10, s: (w.s / totalInd) * 10, o: (w.o / totalInd) * 10, e: (w.e / totalInd) * 10 };
             let combos = [{ name: "大单", s: w.b + w.o }, { name: "大双", s: w.b + w.e }, { name: "小单", s: w.s + w.o }, { name: "小双", s: w.s + w.e }];
@@ -445,7 +443,7 @@
 
             const cur = list[0];
             const curRes = KERNEL.run(cur.n1, cur.n2, cur.n3, cur.sum, list[1], list);
-            const statsForCmd = { killRate: numPct(s.kill), mainRate: numPct(s.main), lastMis: s.consecutiveMis, isDive: Math.abs(cur.n1 - cur.n2) > 8 };
+            const statsForCmd = { killRate: numPct(s.kill), mainRate: (s.main/s.total), lastMis: s.consecutiveMis, isDive: Math.abs(cur.n1 - cur.n2) > 8 };
             const tops = [curRes.nW.b, curRes.nW.s, curRes.nW.o, curRes.nW.e];
             runCommanderV11(tops, curRes.nCombos, statsForCmd);
         },
@@ -462,7 +460,7 @@
     window.onload = APP.init;
 
     // =================================================================
-    // ⚔️ APEX 补丁：极致注码 + 精确盈亏 (三路固定 1000 基准版)
+    // ⚔️ APEX 补丁：极致注码 + 精确盈亏 (三轨固定 1000 基准版)
     // =================================================================
     if (!window._APEX_SYS_) {
         window._APEX_SYS_ = { 
@@ -484,16 +482,12 @@
         const elAction = document.getElementById('cmd-action');
         const elNote = document.getElementById('cmd-note');
 
-        // 固定标准：本金1000 | 止盈200 | 止损-150
-        const userCap = 1000;
-        const userTP = 200;
-        const userSL = -150;
-
+        const userCap = 1000, userTP = 200, userSL = -150;
         const [big, sml, odd, evn] = tops;
         if(!ranks || ranks.length < 4) return;
         const r1 = ranks[0], r2 = ranks[1], r3 = ranks[2], r4 = ranks[3];
         
-        // 1. PnL 结算 (核心修复：精确赔率与纯利润计算)
+        // 1. PnL 结算逻辑 (精确 4.65/4.25 版)
         if (STATE.history.length > 0) {
             const latest = STATE.history[0];
             if (ax.lastQihao && latest.q !== ax.lastQihao && ax.lastTarget) {
@@ -501,84 +495,74 @@
                 const calc = (target, bet) => {
                     if (!target || bet <= 0) return 0;
                     if (target === resStr) {
-                        // 赔率标准：大双小单4.65, 大单小双4.25
                         const odds = (resStr === "大双" || resStr === "小单") ? 4.65 : 4.25;
-                        return bet * (odds - 1); // 纯利润 = 本金 * (赔率 - 1)
+                        return bet * (odds - 1);
                     }
-                    return -bet; // 未中：赔掉全部本金
+                    return -bet;
                 };
                 ax.sessionPnL += (calc(ax.lastT1, ax.lastB1) + calc(ax.lastT2, ax.lastB2) + calc(ax.lastT3, ax.lastB3));
             }
             ax.lastQihao = latest.q;
         }
 
-        const gapBS = Math.abs(big - sml);
-        const gapOE = Math.abs(odd - evn);
-        const resonance = (gapBS > 1.8 && gapOE > 1.8); 
-        const isConsecutiveLoss = (stats.lastMis || 0) >= 2;
-        const isDive = stats.isDive || false;
-        const isApexOpportunity = r1.s > 4.2 || (resonance && r1.s > 3.8);
+        // 2. A-B-C 三轨级差判定
+        const gapA = r1.s - r2.s, gapB = r2.s - r3.s, gapC = r3.s - r4.s;
+        const gBS = Math.abs(big - sml), gOE = Math.abs(odd - evn);
+        const lockX = (gBS > 3.0 || gOE > 3.0); 
 
-        const isTP = ax.sessionPnL >= userTP;
-        const isSL = ax.sessionPnL <= userSL;
+        // 3. 实战状态判定
+        const isTrap = (gapB < 0.4); 
+        const killThreat = (gapC < 0.4); 
+        const isLamp = (stats.mainRate < 0.2); 
+        const isApex = (r1.s > 4.2 && gapA > 1.8 && !isTrap);
+        const isTP = ax.sessionPnL >= userTP, isSL = ax.sessionPnL <= userSL;
 
-        // 固定量化注码 (基于1000本金)
-        const unitHeavy = 50;  // 5%
-        const unitMain = 35;   // 3.5%
-        const unitDef = 15;    // 1.5%
-        const unitFlat = 10;   // 1%
-
-        let statusText = "NORMAL", statusClass = "status-safe", pText = "扫描中...", aText = "等待数据", nText = "...";
+        let pTxt = "扫描中...", aTxt = "等待", nTxt = "...", sClass = "status-safe";
         ax.lastB1 = 0; ax.lastT1 = null; ax.lastB2 = 0; ax.lastT2 = null; ax.lastB3 = 0; ax.lastT3 = null;
 
         if (isTP) {
-            statusText = "TP_ALARM"; statusClass = "status-safe";
-            pText = `止盈达成 (Profit!)`; aText = `强制收工 / 盈余: ${ax.sessionPnL.toFixed(1)}元`; nText = `本金已达收益。`;
+            pTxt = `止盈达成`; aTxt = `今日盈余: ${ax.sessionPnL.toFixed(1)}元`; nText = `达成目标离场。`;
         } 
         else if (isSL) {
-            statusText = "SL_ALARM"; statusClass = "status-danger";
-            pText = `止损熔断 (Alert!)`; aText = `离场观望 / 亏损: ${ax.sessionPnL.toFixed(1)}元`; nText = `触发红线熔断。`;
+            pTxt = `止损熔断`; aTxt = `离场观望`; nText = `触发风控底线。`; sClass = "status-danger";
         }
-        else if (isApexOpportunity) {
-            statusText = "APEX_RECOVERY"; statusClass = "status-safe";
-            pText = `绝杀回归 (重锤位)`; aText = `[${r1.name}] 重注 ${unitHeavy}元`;
-            ax.lastB1 = unitHeavy; ax.lastT1 = r1.name; ax.lastTarget = r1.name; nText = "巅峰权重回补。";
+        else if (killThreat) {
+            pTxt = `杀组威胁 (C轨失效)`; aTxt = `0 元 (离散避风)`; nTxt = `杀组权重过大，暂时停火。`; sClass = "status-danger";
         }
-        else if (resonance) {
-            statusText = "NUCLEAR"; statusClass = "status-safe";
-            pText = `核爆共振 (三路合围)`; aText = `主${r1.name}/${r2.name} 各${unitMain}元 | 防${r3.name} ${unitDef}元`;
-            ax.lastB1 = unitMain; ax.lastT1 = r1.name; ax.lastB2 = unitMain; ax.lastT2 = r2.name; ax.lastB3 = unitDef; ax.lastT3 = r3.name;
-            ax.lastTarget = r1.name + r2.name + r3.name; nText = "高确信三路合围。";
+        else if (isLamp) {
+            pTxt = `明灯反打 (V10)`; aTxt = `[${r2.name}] 35元 / [${r3.name}] 15元`; 
+            ax.lastB1 = 35; ax.lastT1 = r2.name; ax.lastB2 = 15; ax.lastT2 = r3.name; nText = "主力胜率过低，反向博弈。"; sClass = "status-warn";
         }
-        else if (isConsecutiveLoss) {
-             statusText = "HALT"; statusClass = "status-danger";
-             pText = `连黑避风`; aText = `0 元 (离散观望)`; ax.lastTarget = null;
+        else if (isApex) {
+            pTxt = `绝杀回归 (排位锁定)`; aTxt = `[${r1.name}] 30元 + [${r2.name}] 20元`;
+            ax.lastB1 = 30; ax.lastT1 = r1.name; ax.lastB2 = 20; ax.lastT2 = r2.name; nText = "主力权重极高，覆盖前二。";
+        }
+        else if (isTrap) {
+            pTxt = `共振陷阱 (B轨粘连)`; aTxt = `平推 [${r1.name} 20|${r2.name} 20|${r3.name} 10]`;
+            ax.lastB1 = 20; ax.lastT1 = r1.name; ax.lastB2 = 20; ax.lastT2 = r2.name; ax.lastB3 = 10; ax.lastT3 = r3.name; nText = "二三位粘连，强制三路合围。"; sClass = "status-warn";
+        }
+        else if (gapA > 1.2) {
+            pTxt = `坐标锁定 (双路对冲)`; aTxt = `[${r1.name}] 35元 / [${r2.name}] 15元`;
+            ax.lastB1 = 35; ax.lastT1 = r1.name; ax.lastB2 = 15; ax.lastT2 = r2.name; nText = "级差清晰。";
         }
         else {
-            if (r1.s - r2.s > 1.5) {
-                statusText = "SOLO"; pText = `坐标锁定 (双路)`;
-                aText = `[${r1.name}] ${unitMain}元 / [${r2.name}] ${unitDef}元`;
-                ax.lastB1 = unitMain; ax.lastT1 = r1.name; ax.lastB2 = unitDef; ax.lastT2 = r2.name;
-                ax.lastTarget = r1.name + r2.name; nText = "排位清晰对冲。";
-            } else {
-                statusText = "DUAL"; pText = `双头蛇 (对峙)`;
-                aText = `平推 [${r1.name} ${unitFlat}元 + ${r2.name} ${unitFlat}元]`;
-                ax.lastB1 = unitFlat; ax.lastT1 = r1.name; ax.lastB2 = unitFlat; ax.lastT2 = r2.name;
-                ax.lastTarget = r1.name + r2.name; nText = "两强平推。";
-            }
+            pTxt = `混沌乱流 / 双头蛇`; aTxt = `平推 [${r1.name} 10元 + ${r2.name} 10元]`;
+            ax.lastB1 = 10; ax.lastT1 = r1.name; ax.lastB2 = 10; ax.lastT2 = r2.name; nText = "两强对峙。";
         }
 
-        if (isDive && (ax.lastB1 > 0)) {
+        if (stats.isDive && ax.lastB1 > 0) {
+            pTxt += "(跳水修正)"; 
             ax.lastB1 = Math.round(ax.lastB1/2); ax.lastB2 = Math.round(ax.lastB2/2); ax.lastB3 = Math.round(ax.lastB3/2);
-            aText = aText.replace(/\d+元/g, (v) => Math.round(parseInt(v)/2) + "元");
+            aTxt = aTxt.replace(/\d+元/g, (v) => Math.round(parseInt(v)/2) + "元");
         }
 
-        // 渲染
-        elPanel.className = `card cmd-panel ${statusClass}`;
+        ax.lastTarget = (ax.lastT1||'') + (ax.lastT2||'') + (ax.lastT3||'');
+        elPanel.className = `card cmd-panel ${sClass}`;
         const pnlCls = ax.sessionPnL >= 0 ? 'text-gold' : 'text-danger';
-        elStatus.innerHTML = `${statusText} <span class="${pnlCls}">[PnL: ${ax.sessionPnL.toFixed(1)}元]</span> <span style="color:var(--dim)">[目标:200/-150]</span>`;
-        elPattern.innerHTML = pText; elAction.innerHTML = aText; elNote.innerHTML = nText;
-        elSpread.innerHTML = `BS: ${gapBS.toFixed(1)} | OE: ${gapOE.toFixed(1)} | R12: ${(r1.s-r2.s).toFixed(1)}`;
+        elStatus.innerHTML = `PNL: <span class="${pnlCls}">${ax.sessionPnL.toFixed(1)}元</span> <span style="color:var(--dim)">[200/-150]</span>`;
+        elPattern.innerHTML = pTxt + (lockX ? " <small style='color:var(--blue)'>[锁强]</small>" : "");
+        elSpread.innerHTML = `<span class="${gapA>=1.5?'text-gold':''}">A:${gapA.toFixed(1)}</span> | <span class="${isTrap?'text-danger':''}">B:${gapB.toFixed(1)}</span> | <span class="${killThreat?'text-danger':''}">C:${gapC.toFixed(1)}</span>`;
+        elAction.innerHTML = aTxt; elNote.innerHTML = nText;
     }
 </script>
 </body>
