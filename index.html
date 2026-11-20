@@ -334,53 +334,36 @@
 
     const APP = {
         init: () => APP.sync(),
-        sync: async () => {
-            const time = Date.now();
-            const logStatus = (msg) => document.getElementById('timer').innerHTML = `<i class="ph-bold ph-arrows-clockwise"></i> ${msg}`;
-            const lines = [
-                { name: "高速", url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(CONFIG.API + "&t=" + time)}`, type: "direct" },
-                { name: "备用", url: `https://api.allorigins.win/get?url=${encodeURIComponent(CONFIG.API + "&t=" + time)}`, type: "wrap" }
-            ];
-
+                sync: async () => {
+            const url = `${CONFIG.API}${CONFIG.API.includes('?') ? '&' : '?'}t=${Date.now()}`;
             try {
-                let res = await fetch(lines[0].url);
-                if (!res.ok) throw new Error("高速线中断");
-                let json = await res.json();
-                let data = json.data; 
-                if (!data || !data.length) throw new Error("高速线数据为空");
-             STATE.history = data.map(i => {
-    const match = i.number.match(/(\d+)\+(\d+)\+(\d+)=(\d+)/);
-    if (!match) return null;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`直连失败: ${res.status}`);
+                const json = await res.json();
+                const data = json.data;
+                if (!Array.isArray(data) || !data.length) throw new Error("接口数据为空");
 
-    return {
-        q: String(i.nbr),
-        n1: Number(match[1]),
-        n2: Number(match[2]),
-        n3: Number(match[3]),
-        sum: Number(match[4])
-    };
-}).filter(Boolean);
+                STATE.history = data.map(i => {
+                    const match = i.number.match(/(\d+)\+(\d+)\+(\d+)=(\d+)/);
+                    if (!match) return null;
+                    return {
+                        q: String(i.nbr),
+                        n1: Number(match[1]),
+                        n2: Number(match[2]),
+                        n3: Number(match[3]),
+                        sum: Number(match[4])
+                    };
+                }).filter(Boolean);
+
                 APP.render();
-                document.getElementById('timer').innerHTML = `<i class="ph-bold ph-lightning"></i> 链路锁定: 高速`;
-            } catch (e1) {
-                try {
-                    let res = await fetch(lines[1].url);
-                    let json = await res.json();
-                    let data = JSON.parse(json.contents).data;
-                    if(data && data.length) {
-                        STATE.history = data.map(i => {
-                            const n = i.opennum.split('+').map(Number);
-                            return { q: i.qihao, n1:n[0], n2:n[1], n3:n[2], sum: parseInt(i.sum) };
-                        });
-                        APP.render();
-                        document.getElementById('timer').innerHTML = `<i class="ph-bold ph-shield"></i> 链路锁定: 备用`;
-                    }
-                } catch (e2) {
-                    document.getElementById('timer').innerText = "链路通讯完全中断";
-                }
+                document.getElementById('timer').innerHTML = `<i class="ph-bold ph-lightning"></i> 链路锁定: 直连`;
+            } catch (err) {
+                console.warn("直连中断:", err);
+                document.getElementById('timer').innerText = "链路通讯完全中断";
             }
             APP.startTimer();
         },
+
         render: () => {
             const list = STATE.history;
             if(list.length < 5) return;
