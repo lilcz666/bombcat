@@ -256,7 +256,7 @@
 <script>
     // ================= 核心 KERNEL：100% 原始代码 =================
     const CONFIG = {
-        API: "https://pc28.help/kj.json?limit=20",
+        API: "https://yu28.top/api/kj.json?nbr=100&key=yu28_9d92c0db149c5826",
         REFRESH: 25,
         C: { 
             SCAL_GOLD: 3.81966, SQRT_OSC: 28.5, SQRT_ADD: 7.5515,
@@ -348,10 +348,18 @@
                 let json = await res.json();
                 let data = json.data; 
                 if (!data || !data.length) throw new Error("高速线数据为空");
-                STATE.history = data.map(i => {
-                    const n = i.opennum.split('+').map(Number);
-                    return { q: i.qihao, n1:n[0], n2:n[1], n3:n[2], sum: parseInt(i.sum) };
-                });
+             STATE.history = data.map(i => {
+    const match = i.number.match(/(\d+)\+(\d+)\+(\d+)=(\d+)/);
+    if (!match) return null;
+
+    return {
+        q: String(i.nbr),
+        n1: Number(match[1]),
+        n2: Number(match[2]),
+        n3: Number(match[3]),
+        sum: Number(match[4])
+    };
+}).filter(Boolean);
                 APP.render();
                 document.getElementById('timer').innerHTML = `<i class="ph-bold ph-lightning"></i> 链路锁定: 高速`;
             } catch (e1) {
