@@ -334,17 +334,18 @@
 
     const APP = {
         init: () => APP.sync(),
-                                sync: async () => {
+                                        sync: async () => {
             try {
-                const url = "https://corsproxy.io/?" + encodeURIComponent(CONFIG.API + "&t=" + Date.now());
+                const target = CONFIG.API + "&t=" + Date.now();
+                const url = "https://api.allorigins.win/raw?url=" + encodeURIComponent(target);
                 const res = await fetch(url);
                 const json = await res.json();
                 STATE.history = json.data.map(i => {
-                    const m = i.number.match(/(\d+)\+(\d+)\+(\d+)=(\d+)/);
+                    const m = String(i.number || '').match(/(\d+)\+(\d+)\+(\d+)=(\d+)/);
                     return m ? { q: String(i.nbr), n1: +m[1], n2: +m[2], n3: +m[3], sum: +m[4] } : null;
                 }).filter(Boolean);
                 APP.render();
-                document.getElementById('timer').innerHTML = `<i class="ph-bold ph-lightning"></i> 链路锁定: 直连代理`;
+                document.getElementById('timer').innerHTML = `<i class="ph-bold ph-lightning"></i> 链路锁定: AllOrigins`;
             } catch (e) {
                 document.getElementById('timer').innerText = "链路通讯完全中断";
             }
