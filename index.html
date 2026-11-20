@@ -334,60 +334,23 @@
 
     const APP = {
         init: () => APP.sync(),
-                        sync: async () => {
-            const targetUrl = `${CONFIG.API}${CONFIG.API.includes('?') ? '&' : '?'}t=${Date.now()}`;
-            const lines = [
-                {
-                    name: "线路1",
-                    url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-                    extractData: async (res) => {
-                        const json = await res.json();
-                        return json.data;
-                    }
-                },
-                {
-                    name: "线路2",
-                    url: `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
-                    extractData: async (res) => {
-                        const json = await res.json();
-                        return json.data;
-                    }
-                }
-            ];
-
-            for (const line of lines) {
-                try {
-                    const res = await fetch(line.url);
-                    if (!res.ok) throw new Error(`${line.name} HTTP ${res.status}`);
-                    const data = await line.extractData(res);
-                    if (!Array.isArray(data) || !data.length) throw new Error(`${line.name} 数据为空`);
-
-                    STATE.history = data.map(i => {
-                        const match = String(i.number || '').match(/(\d+)\+(\d+)\+(\d+)=(\d+)/);
-                        if (!match) return null;
-                        return {
-                            q: String(i.nbr),
-                            n1: Number(match[1]),
-                            n2: Number(match[2]),
-                            n3: Number(match[3]),
-                            sum: Number(match[4])
-                        };
-                    }).filter(Boolean);
-
-                    if (!STATE.history.length) throw new Error(`${line.name} 解析后无有效记录`);
-
-                    APP.render();
-                    document.getElementById('timer').innerHTML = `<i class="ph-bold ph-lightning"></i> 链路锁定: ${line.name}`;
-                    APP.startTimer();
-                    return;
-                } catch (err) {
-                    console.warn("代理尝试失败:", err);
-                }
+                                sync: async () => {
+            try {
+                const url = "https://corsproxy.io/?" + encodeURIComponent(CONFIG.API + "&t=" + Date.now());
+                const res = await fetch(url);
+                const json = await res.json();
+                STATE.history = json.data.map(i => {
+                    const m = i.number.match(/(\d+)\+(\d+)\+(\d+)=(\d+)/);
+                    return m ? { q: String(i.nbr), n1: +m[1], n2: +m[2], n3: +m[3], sum: +m[4] } : null;
+                }).filter(Boolean);
+                APP.render();
+                document.getElementById('timer').innerHTML = `<i class="ph-bold ph-lightning"></i> 链路锁定: 直连代理`;
+            } catch (e) {
+                document.getElementById('timer').innerText = "链路通讯完全中断";
             }
-
-            document.getElementById('timer').innerText = "链路通讯完全中断";
             APP.startTimer();
         },
+
 
 
         render: () => {
