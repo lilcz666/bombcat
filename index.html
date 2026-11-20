@@ -334,25 +334,28 @@
 
     const APP = {
         init: () => APP.sync(),
-                                        sync: async () => {
+         sync: async () => {
             try {
-                const target = CONFIG.API + "&t=" + Date.now();
-                const url = "https://api.allorigins.win/raw?url=" + encodeURIComponent(target);
-                const res = await fetch(url);
-                const json = await res.json();
+                const targetUrl = `${CONFIG.API}${CONFIG.API.includes('?') ? '&' : '?'}t=${Date.now()}`;
+                const params = new URLSearchParams({
+                    key: "4d17f38f",
+                    url: targetUrl,
+                });
+                const response = await fetch('https://corsproxy.io/?' + params);
+                if (!response.ok) throw new Error('HTTP ' + response.status + ': ' + await response.text());
+                const json = await response.json();
                 STATE.history = json.data.map(i => {
                     const m = String(i.number || '').match(/(\d+)\+(\d+)\+(\d+)=(\d+)/);
                     return m ? { q: String(i.nbr), n1: +m[1], n2: +m[2], n3: +m[3], sum: +m[4] } : null;
                 }).filter(Boolean);
                 APP.render();
-                document.getElementById('timer').innerHTML = `<i class="ph-bold ph-lightning"></i> 链路锁定: AllOrigins`;
+                document.getElementById('timer').innerHTML = `<i class="ph-bold ph-lightning"></i> 链路锁定: CorsProxy`;
             } catch (e) {
+                console.warn(e);
                 document.getElementById('timer').innerText = "链路通讯完全中断";
             }
             APP.startTimer();
         },
-
-
 
         render: () => {
             const list = STATE.history;
